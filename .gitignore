@@ -1,0 +1,55 @@
+# ──────────────────────────────────────────────
+# Versah EstoqueControl — .gitignore
+# ──────────────────────────────────────────────
+
+# ── Variáveis de ambiente (NUNCA subir para o GitHub) ──
+.env
+.env.local
+.env.development
+.env.production
+.env*.local
+
+# ── Dependências do Node.js ──
+node_modules/
+backend/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json   # opcional: remova esta linha se quiser versionar o lock
+
+# ── Logs ──
+logs/
+*.log
+pids/
+*.pid
+*.seed
+
+# ── Dados locais do volume do PostgreSQL ──
+# (caso você rode o postgres fora do Docker em algum momento)
+pgdata/
+postgres_data/
+.postgres/
+
+# ── Build / compilação ──
+dist/
+build/
+.cache/
+
+# ── Editores e IDEs ──
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Docker: arquivos gerados localmente ──
+# O docker-compose.yml em si DEVE ser versionado.
+# O que não deve são overrides com segredos locais:
+docker-compose.override.yml
+
+# ── Arquivos de sistema ──
+.DS_Store
+.AppleDouble
+.LSOverride

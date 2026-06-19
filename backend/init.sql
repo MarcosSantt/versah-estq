@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS estoque_items (
   atualizado_em TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ── Tabela de histórico de movimentações ─────────────────
+-- ── Tabela de histórico de movimentaçõess ─────────────────
 CREATE TABLE IF NOT EXISTS historico_movimentacoes (
   id         SERIAL PRIMARY KEY,
   usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
