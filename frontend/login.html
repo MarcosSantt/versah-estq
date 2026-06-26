@@ -1,476 +1,481 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Versah | EstoqueControl</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Versah | EstoqueControl</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    :root {
-      --bg:        #F4F3EF;
-      --surface:   #FFFFFF;
-      --border:    #E2DDD3;
-      --muted:     #D1CBBB;
-      --subtle:    #858175;
-      --dim:       #6A6658;
-      --secondary: #6A6658;
-      --primary:   #2C2A26;
-      --bright:    #1A1815;
-      --accent:    #C3A365;
-      --green:     #22c55e;
-      --red:       #ef4444;
-      --mono:      'DM Mono', monospace;
-      --sans:      'IBM Plex Sans', sans-serif;
-    }
+    :root {
+      --bg:        #F4F3EF;
+      --surface:   #FFFFFF;
+      --border:    #E2DDD3;
+      --muted:     #D1CBBB;
+      --subtle:    #858175;
+      --dim:       #6A6658;
+      --secondary: #6A6658;
+      --primary:   #2C2A26;
+      --bright:    #1A1815;
+      --accent:    #C3A365;
+      --green:     #22c55e;
+      --red:       #ef4444;
+      --mono:      'DM Mono', monospace;
+      --sans:      'IBM Plex Sans', sans-serif;
+    }
 
-    body {
-      background: var(--bg);
-      color: var(--primary);
-      font-family: var(--sans);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
+    body {
+      background: var(--bg);
+      color: var(--primary);
+      font-family: var(--sans);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
 
-    .auth-wrapper { width: 100%; max-width: 420px; }
+    .auth-wrapper { width: 100%; max-width: 420px; }
 
-    .auth-header { text-align: center; margin-bottom: 32px; }
-    .auth-logo {
-      display: inline-flex; align-items: center;
-      justify-content: center; margin-bottom: 16px;
-    }
-    .auth-title {
-      font-family: var(--sans); font-weight: 600;
-      font-size: 22px; color: var(--bright); letter-spacing: -0.01em;
-    }
-    .auth-sub { font-size: 13px; color: var(--subtle); margin-top: 4px; }
+    .auth-header { text-align: center; margin-bottom: 32px; }
+    .auth-logo {
+      display: inline-flex; align-items: center;
+      justify-content: center; margin-bottom: 16px;
+    }
+    .auth-title {
+      font-family: var(--sans); font-weight: 600;
+      font-size: 22px; color: var(--bright); letter-spacing: -0.01em;
+    }
+    .auth-sub { font-size: 13px; color: var(--subtle); margin-top: 4px; }
 
-    .auth-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 20px; padding: 36px 32px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.04);
-    }
+    .auth-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 36px 32px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+    }
 
-    .tab-bar {
-      display: flex; background: var(--bg); border-radius: 10px;
-      padding: 4px; margin-bottom: 28px; gap: 4px;
-    }
-    .tab-btn {
-      flex: 1; padding: 9px; border: none; background: transparent;
-      border-radius: 8px; font-size: 13px; font-weight: 600;
-      color: var(--subtle); cursor: pointer; transition: all 0.2s;
-      font-family: var(--sans);
-    }
-    .tab-btn.ativo {
-      background: var(--surface); color: var(--bright);
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-    }
+    .tab-bar {
+      display: flex; background: var(--bg); border-radius: 10px;
+      padding: 4px; margin-bottom: 28px; gap: 4px;
+    }
+    .tab-btn {
+      flex: 1; padding: 9px; border: none; background: transparent;
+      border-radius: 8px; font-size: 13px; font-weight: 600;
+      color: var(--subtle); cursor: pointer; transition: all 0.2s;
+      font-family: var(--sans);
+    }
+    .tab-btn.ativo {
+      background: var(--surface); color: var(--bright);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
 
-    .form-group { margin-bottom: 16px; }
-    .form-group label {
-      display: block; margin-bottom: 6px; font-size: 11px;
-      color: var(--dim); font-family: var(--mono);
-      letter-spacing: 0.07em; text-transform: uppercase;
-    }
-    .input-wrap { position: relative; }
-    .input-wrap input {
-      width: 100%; padding: 13px 14px; background: var(--surface);
-      border: 1px solid var(--border); border-radius: 10px;
-      color: var(--primary); font-size: 16px; font-family: var(--sans);
-      transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    .input-wrap input::placeholder { color: var(--muted); }
-    .input-wrap input:focus {
-      outline: none; border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(195, 163, 101, 0.18);
-    }
-    .toggle-senha {
-      position: absolute; right: 14px; top: 50%;
-      transform: translateY(-50%); background: none; border: none;
-      cursor: pointer; color: var(--subtle); font-size: 18px;
-      padding: 0; line-height: 1; transition: color 0.15s;
-    }
-    .toggle-senha:hover { color: var(--dim); transform: translateY(-50%) scale(1.1); }
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block; margin-bottom: 6px; font-size: 11px;
+      color: var(--dim); font-family: var(--mono);
+      letter-spacing: 0.07em; text-transform: uppercase;
+    }
+    .input-wrap { position: relative; }
+    .input-wrap input {
+      width: 100%; padding: 13px 14px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 10px;
+      color: var(--primary); font-size: 16px; font-family: var(--sans);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .input-wrap input::placeholder { color: var(--muted); }
+    .input-wrap input:focus {
+      outline: none; border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(195, 163, 101, 0.18);
+    }
+    .toggle-senha {
+      position: absolute; right: 14px; top: 50%;
+      transform: translateY(-50%); background: none; border: none;
+      cursor: pointer; color: var(--subtle); font-size: 18px;
+      padding: 0; line-height: 1; transition: color 0.15s;
+    }
+    .toggle-senha:hover { color: var(--dim); transform: translateY(-50%) scale(1.1); }
 
-    .esqueci {
-      display: block; text-align: right; font-size: 12px;
-      color: var(--subtle); margin-top: -8px; margin-bottom: 16px;
-      cursor: pointer; text-decoration: underline;
-      text-underline-offset: 2px; transition: color 0.15s;
-      background: none; border: none; font-family: var(--sans);
-    }
-    .esqueci:hover { color: var(--accent); }
+    .esqueci {
+      display: block; text-align: right; font-size: 12px;
+      color: var(--subtle); margin-top: -8px; margin-bottom: 16px;
+      cursor: pointer; text-decoration: underline;
+      text-underline-offset: 2px; transition: color 0.15s;
+      background: none; border: none; font-family: var(--sans);
+    }
+    .esqueci:hover { color: var(--accent); }
 
-    .btn-auth {
-      width: 100%; padding: 14px; border: none; border-radius: 10px;
-      background: var(--accent); color: #fff; font-size: 15px;
-      font-weight: 600; font-family: var(--sans); cursor: pointer;
-      transition: filter 0.15s, transform 0.1s; margin-top: 4px;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-    }
-    .btn-auth:hover { filter: brightness(1.08); transform: translateY(-1px); }
-    .btn-auth:active { transform: translateY(0); }
-    .btn-auth:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-auth {
+      width: 100%; padding: 14px; border: none; border-radius: 10px;
+      background: var(--accent); color: #fff; font-size: 15px;
+      font-weight: 600; font-family: var(--sans); cursor: pointer;
+      transition: filter 0.15s, transform 0.1s; margin-top: 4px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-auth:hover { filter: brightness(1.08); transform: translateY(-1px); }
+    .btn-auth:active { transform: translateY(0); }
+    .btn-auth:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-    .spinner {
-      width: 16px; height: 16px;
-      border: 2px solid rgba(255,255,255,0.4);
-      border-top-color: #fff; border-radius: 50%;
-      animation: spin 0.7s linear infinite; display: none;
-    }
-    .btn-auth.loading .spinner { display: block; }
-    .btn-auth.loading .btn-text { opacity: 0.7; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin 0.7s linear infinite; display: none;
+    }
+    .btn-auth.loading .spinner { display: block; }
+    .btn-auth.loading .btn-text { opacity: 0.7; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Alerta inline */
-    .alerta {
-      padding: 12px 14px; border-radius: 10px; font-size: 13px;
-      font-weight: 500; margin-bottom: 16px; display: none;
-      align-items: center; gap: 8px;
-    }
-    .alerta.erro  { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
-    .alerta.ok    { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
-    .alerta.show  { display: flex; }
+    /* Alerta inline */
+    .alerta {
+      padding: 12px 14px; border-radius: 10px; font-size: 13px;
+      font-weight: 500; margin-bottom: 16px; display: none;
+      align-items: center; gap: 8px;
+    }
+    .alerta.erro  { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+    .alerta.ok    { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+    .alerta.show  { display: flex; }
 
-    /* Força da senha */
-    .senha-forca { margin-top: 8px; display: none; }
-    .senha-forca.visible { display: block; }
-    .forca-bar { display: flex; gap: 4px; margin-bottom: 4px; }
-    .forca-seg {
-      flex: 1; height: 3px; border-radius: 2px;
-      background: var(--border); transition: background 0.3s;
-    }
-    .forca-label { font-size: 11px; color: var(--subtle); font-family: var(--mono); }
-    .senha-checklist {
-      margin-top: 6px; display: none;
-      flex-direction: column; gap: 3px;
-    }
-    .senha-checklist.visible { display: flex; }
-    .check-item {
-      font-size: 11px; color: var(--muted); font-family: var(--mono);
-      display: flex; align-items: center; gap: 6px; transition: color 0.2s;
-    }
-    .check-item.ok { color: var(--green); }
-    .check-item .c { font-size: 10px; }
+    /* Força da senha */
+    .senha-forca { margin-top: 8px; display: none; }
+    .senha-forca.visible { display: block; }
+    .forca-bar { display: flex; gap: 4px; margin-bottom: 4px; }
+    .forca-seg {
+      flex: 1; height: 3px; border-radius: 2px;
+      background: var(--border); transition: background 0.3s;
+    }
+    .forca-label { font-size: 11px; color: var(--subtle); font-family: var(--mono); }
+    .senha-checklist {
+      margin-top: 6px; display: none;
+      flex-direction: column; gap: 3px;
+    }
+    .senha-checklist.visible { display: flex; }
+    .check-item {
+      font-size: 11px; color: var(--muted); font-family: var(--mono);
+      display: flex; align-items: center; gap: 6px; transition: color 0.2s;
+    }
+    .check-item.ok { color: var(--green); }
+    .check-item .c { font-size: 10px; }
 
-    /* Recuperação */
-    .recovery-panel { display: none; }
-    .recovery-panel.visible { display: block; }
-    .recovery-back {
-      background: none; border: none; font-size: 13px; color: var(--subtle);
-      cursor: pointer; font-family: var(--sans); display: flex;
-      align-items: center; gap: 4px; margin-bottom: 20px; padding: 0;
-    }
-    .recovery-back:hover { color: var(--accent); }
-    .recovery-title { font-family: var(--mono); font-size: 16px; color: var(--bright); margin-bottom: 8px; }
-    .recovery-desc { font-size: 13px; color: var(--subtle); margin-bottom: 20px; line-height: 1.5; }
+    /* Recuperação — FIX: usa display via JS, não via classe CSS */
+    .recovery-panel { display: none; }
 
-    .auth-footer { text-align: center; margin-top: 24px; font-size: 12px; color: var(--muted); }
+    .recovery-back {
+      background: none; border: none; font-size: 13px; color: var(--subtle);
+      cursor: pointer; font-family: var(--sans); display: flex;
+      align-items: center; gap: 4px; margin-bottom: 20px; padding: 0;
+    }
+    .recovery-back:hover { color: var(--accent); }
+    .recovery-title { font-family: var(--mono); font-size: 16px; color: var(--bright); margin-bottom: 8px; }
+    .recovery-desc { font-size: 13px; color: var(--subtle); margin-bottom: 20px; line-height: 1.5; }
 
-    /* Toast */
-    .toast {
-      position: fixed; bottom: 24px; right: 24px;
-      background: #1A1815; color: #fff;
-      padding: 12px 20px; border-radius: 10px; font-size: 13px;
-      font-weight: 600; box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-      display: flex; align-items: center; gap: 8px; z-index: 9999;
-      transform: translateY(80px); opacity: 0;
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    .toast.show { transform: translateY(0); opacity: 1; }
-    .toast.sucesso { border-left: 3px solid var(--green); }
-    .toast.erro    { border-left: 3px solid var(--red); }
+    .auth-footer { text-align: center; margin-top: 24px; font-size: 12px; color: var(--muted); }
 
-    @media (max-width: 480px) {
-      .auth-card { padding: 28px 20px; border-radius: 16px; }
-    }
-  </style>
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: #1A1815; color: #fff;
+      padding: 12px 20px; border-radius: 10px; font-size: 13px;
+      font-weight: 600; box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+      display: flex; align-items: center; gap: 8px; z-index: 9999;
+      transform: translateY(80px); opacity: 0;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.sucesso { border-left: 3px solid var(--green); }
+    .toast.erro    { border-left: 3px solid var(--red); }
+
+    @media (max-width: 480px) {
+      .auth-card { padding: 28px 20px; border-radius: 16px; }
+    }
+  </style>
 </head>
 <body>
 
 <div class="auth-wrapper">
 
-  <div class="auth-header">
-    <div class="auth-logo">
-      <svg width="40" height="40" viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 0C5.373 0 0 5.373 0 12C0 15.9 1.87 19.37 4.77 21.6L12 36L19.23 21.6C22.13 19.37 24 15.9 24 12C24 5.373 18.627 0 12 0Z" fill="#C3A365"/>
-        <circle cx="12" cy="12" r="5" fill="#6A6658"/>
-      </svg>
-    </div>
-    <div class="auth-title">Versah · EstoqueControl</div>
-    <div class="auth-sub">Gestão de materiais e insumos</div>
-  </div>
+  <div class="auth-header">
+    <div class="auth-logo">
+      <svg width="40" height="40" viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 0C5.373 0 0 5.373 0 12C0 15.9 1.87 19.37 4.77 21.6L12 36L19.23 21.6C22.13 19.37 24 15.9 24 12C24 5.373 18.627 0 12 0Z" fill="#C3A365"/>
+        <circle cx="12" cy="12" r="5" fill="#6A6658"/>
+      </svg>
+    </div>
+    <div class="auth-title">Versah · EstoqueControl</div>
+    <div class="auth-sub">Gestão de materiais e insumos</div>
+  </div>
 
-  <div class="auth-card">
-    <div class="alerta" id="alerta"></div>
+  <div class="auth-card">
+    <div class="alerta" id="alerta"></div>
 
-    <div id="painel-auth">
-      <div class="tab-bar">
-        <button class="tab-btn ativo" id="tab-login" onclick="mostrarAba('login')">Entrar</button>
-        <button class="tab-btn" id="tab-cadastro" onclick="mostrarAba('cadastro')">Criar conta</button>
-      </div>
+    <div id="painel-auth">
+      <div class="tab-bar">
+        <button class="tab-btn ativo" id="tab-login" onclick="mostrarAba('login')">Entrar</button>
+        <button class="tab-btn" id="tab-cadastro" onclick="mostrarAba('cadastro')">Criar conta</button>
+      </div>
 
-      <!-- ── Formulário de Login ── -->
-      <div id="form-login">
-        <div class="form-group">
-          <label>E-mail</label>
-          <div class="input-wrap">
-            <input type="email" id="login-email" placeholder="seu@email.com"
-                   onkeydown="if(event.key==='Enter') entrar()" />
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Senha</label>
-          <div class="input-wrap">
-            <input type="password" id="login-senha" placeholder="••••••••"
-                   onkeydown="if(event.key==='Enter') entrar()" />
-            <button class="toggle-senha" type="button"
-                    onclick="toggleSenha('login-senha', this)" title="Mostrar/ocultar">👁</button>
-          </div>
-        </div>
-        <button class="esqueci" onclick="mostrarRecuperacao()">Esqueci minha senha</button>
-        <button class="btn-auth" id="btn-entrar" onclick="entrar()">
-          <span class="spinner"></span>
-          <span class="btn-text">Entrar</span>
-        </button>
-      </div>
+      <!-- ── Formulário de Login ── -->
+      <div id="form-login">
+        <div class="form-group">
+          <label>E-mail</label>
+          <div class="input-wrap">
+            <input type="email" id="login-email" placeholder="seu@email.com"
+                   onkeydown="if(event.key==='Enter') entrar()" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Senha</label>
+          <div class="input-wrap">
+            <input type="password" id="login-senha" placeholder="••••••••"
+                   onkeydown="if(event.key==='Enter') entrar()" />
+            <button class="toggle-senha" type="button"
+                    onclick="toggleSenha('login-senha', this)" title="Mostrar/ocultar">👁</button>
+          </div>
+        </div>
+        <button class="esqueci" onclick="mostrarRecuperacao()">Esqueci minha senha</button>
+        <button class="btn-auth" id="btn-entrar" onclick="entrar()">
+          <span class="spinner"></span>
+          <span class="btn-text">Entrar</span>
+        </button>
+      </div>
 
-      <!-- ── Formulário de Cadastro ── -->
-      <div id="form-cadastro" style="display:none">
-        <div class="form-group">
-          <label>Nome completo</label>
-          <div class="input-wrap">
-            <input type="text" id="cad-nome" placeholder="Seu nome" />
-          </div>
-        </div>
-        <div class="form-group">
-          <label>E-mail</label>
-          <div class="input-wrap">
-            <input type="email" id="cad-email" placeholder="seu@email.com" />
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Senha</label>
-          <div class="input-wrap">
-            <input type="password" id="cad-senha" placeholder="Mínimo 8 caracteres"
-                   oninput="verificarForca(this.value)" />
-            <button class="toggle-senha" type="button"
-                    onclick="toggleSenha('cad-senha', this)" title="Mostrar/ocultar">👁</button>
-          </div>
-          <div class="senha-forca" id="forca-wrap">
-            <div class="forca-bar">
-              <div class="forca-seg" id="f1"></div>
-              <div class="forca-seg" id="f2"></div>
-              <div class="forca-seg" id="f3"></div>
-              <div class="forca-seg" id="f4"></div>
-            </div>
-            <div class="forca-label" id="forca-label">Fraca</div>
-          </div>
-          <div class="senha-checklist" id="checklist">
-            <div class="check-item" id="chk-len"><span class="c">○</span> Mínimo 8 caracteres</div>
-            <div class="check-item" id="chk-upper"><span class="c">○</span> Uma letra maiúscula</div>
-            <div class="check-item" id="chk-num"><span class="c">○</span> Um número</div>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Confirmar senha</label>
-          <div class="input-wrap">
-            <input type="password" id="cad-confirma" placeholder="••••••••"
-                   onkeydown="if(event.key==='Enter') cadastrar()" />
-            <button class="toggle-senha" type="button"
-                    onclick="toggleSenha('cad-confirma', this)" title="Mostrar/ocultar">👁</button>
-          </div>
-        </div>
-        <button class="btn-auth" id="btn-cadastrar" onclick="cadastrar()">
-          <span class="spinner"></span>
-          <span class="btn-text">Criar conta</span>
-        </button>
-      </div>
-    </div>
+      <!-- ── Formulário de Cadastro ── -->
+      <div id="form-cadastro" style="display:none">
+        <div class="form-group">
+          <label>Nome completo</label>
+          <div class="input-wrap">
+            <input type="text" id="cad-nome" placeholder="Seu nome" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>E-mail</label>
+          <div class="input-wrap">
+            <input type="email" id="cad-email" placeholder="seu@email.com" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Senha</label>
+          <div class="input-wrap">
+            <input type="password" id="cad-senha" placeholder="Mínimo 8 caracteres"
+                   oninput="verificarForca(this.value)" />
+            <button class="toggle-senha" type="button"
+                    onclick="toggleSenha('cad-senha', this)" title="Mostrar/ocultar">👁</button>
+          </div>
+          <div class="senha-forca" id="forca-wrap">
+            <div class="forca-bar">
+              <div class="forca-seg" id="f1"></div>
+              <div class="forca-seg" id="f2"></div>
+              <div class="forca-seg" id="f3"></div>
+              <div class="forca-seg" id="f4"></div>
+            </div>
+            <div class="forca-label" id="forca-label">Fraca</div>
+          </div>
+          <div class="senha-checklist" id="checklist">
+            <div class="check-item" id="chk-len"><span class="c">○</span> Mínimo 8 caracteres</div>
+            <div class="check-item" id="chk-upper"><span class="c">○</span> Uma letra maiúscula</div>
+            <div class="check-item" id="chk-num"><span class="c">○</span> Um número</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Confirmar senha</label>
+          <div class="input-wrap">
+            <input type="password" id="cad-confirma" placeholder="••••••••"
+                   onkeydown="if(event.key==='Enter') cadastrar()" />
+            <button class="toggle-senha" type="button"
+                    onclick="toggleSenha('cad-confirma', this)" title="Mostrar/ocultar">👁</button>
+          </div>
+        </div>
+        <button class="btn-auth" id="btn-cadastrar" onclick="cadastrar()">
+          <span class="spinner"></span>
+          <span class="btn-text">Criar conta</span>
+        </button>
+      </div>
+    </div>
 
-    <!-- ── Painel de recuperação ── -->
-    <div class="recovery-panel" id="painel-recuperacao">
-      <button class="recovery-back" onclick="mostrarAuth()">← Voltar</button>
-      <div class="recovery-title">Recuperar senha</div>
-      <p class="recovery-desc">
-        Entre em contato com o administrador do sistema para redefinir sua senha.
-      </p>
-    </div>
+    <!-- ── Painel de recuperação ── -->
+    <div class="recovery-panel" id="painel-recuperacao">
+      <button class="recovery-back" onclick="mostrarAuth()">← Voltar</button>
+      <div class="recovery-title">Recuperar senha</div>
+      <p class="recovery-desc">
+        Entre em contato com o administrador do sistema para redefinir sua senha.
+      </p>
+    </div>
 
-  </div>
+  </div>
 
-  <div class="auth-footer">
-    Versah EstoqueControl &nbsp;·&nbsp; Dados armazenados localmente com segurança
-  </div>
+  <div class="auth-footer">
+    Versah EstoqueControl &nbsp;·&nbsp; Dados armazenados com segurança
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-  // ── URL base do backend ───────────────────────────────────
-  // Em desenvolvimento local: http://localhost:3000
-  // Em produção: troque pelo domínio do seu servidor
-  const API = 'http://localhost:3000/api';
+  // ── URL base do backend ───────────────────────────────────
+  // Em desenvolvimento local use: http://localhost:3000/api
+  // Em produção troque pelo domínio do Render, ex:
+  // const API = 'https://versah-estoquecontrol.onrender.com/api';
+  const API = 'http://localhost:3000/api';
 
-  // ── Redireciona para o estoque se já estiver logado ──────
-  if (localStorage.getItem('versah_token')) {
-    window.location.href = 'index.html';
-  }
+  // ── Redireciona para o estoque se já estiver logado ──────
+  if (localStorage.getItem('versah_token')) {
+    window.location.href = 'index.html';
+  }
 
-  // ─────────────────────────────────────────────────────────
-  // ENTRAR (Login)
-  // ─────────────────────────────────────────────────────────
-  async function entrar() {
-    limparAlerta();
-    const email = document.getElementById('login-email').value.trim();
-    const senha = document.getElementById('login-senha').value;
+  // ─────────────────────────────────────────────────────────
+  // ENTRAR (Login)
+  // ─────────────────────────────────────────────────────────
+  async function entrar() {
+    limparAlerta();
+    const email = document.getElementById('login-email').value.trim();
+    const senha = document.getElementById('login-senha').value;
 
-    if (!email || !senha) return showAlerta('Preencha e-mail e senha.', 'erro');
+    if (!email || !senha) return showAlerta('Preencha e-mail e senha.', 'erro');
 
-    try {
-      setLoading('btn-entrar', true);
-      const res = await fetch(`${API}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, senha })
-      });
-      const data = await res.json();
+    try {
+      setLoading('btn-entrar', true);
+      const res = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, senha })
+      });
+      const data = await res.json();
 
-      if (!res.ok) return showAlerta(data.erro || 'Erro ao autenticar.', 'erro');
+      if (!res.ok) return showAlerta(data.erro || 'Erro ao autenticar.', 'erro');
 
-      // Salva token e dados do usuário no localStorage
-      localStorage.setItem('versah_token', data.token);
-      localStorage.setItem('versah_usuario', JSON.stringify(data.usuario));
+      localStorage.setItem('versah_token', data.token);
+      localStorage.setItem('versah_usuario', JSON.stringify(data.usuario));
 
-      showAlerta('✓ Login realizado! Redirecionando...', 'ok');
-      setTimeout(() => { window.location.href = 'index.html'; }, 800);
-    } catch {
-      showAlerta('Não foi possível conectar ao servidor. Verifique se o backend está rodando.', 'erro');
-    } finally {
-      setLoading('btn-entrar', false);
-    }
-  }
+      showAlerta('✓ Login realizado! Redirecionando...', 'ok');
+      setTimeout(() => { window.location.href = 'index.html'; }, 800);
+    } catch {
+      showAlerta('Não foi possível conectar ao servidor. Verifique se o backend está rodando.', 'erro');
+    } finally {
+      setLoading('btn-entrar', false);
+    }
+  }
 
-  // ─────────────────────────────────────────────────────────
-  // CADASTRAR
-  // ─────────────────────────────────────────────────────────
-  async function cadastrar() {
-    limparAlerta();
-    const nome     = document.getElementById('cad-nome').value.trim();
-    const email    = document.getElementById('cad-email').value.trim();
-    const senha    = document.getElementById('cad-senha').value;
-    const confirma = document.getElementById('cad-confirma').value;
+  // ─────────────────────────────────────────────────────────
+  // CADASTRAR
+  // ─────────────────────────────────────────────────────────
+  async function cadastrar() {
+    limparAlerta();
+    const nome     = document.getElementById('cad-nome').value.trim();
+    const email    = document.getElementById('cad-email').value.trim();
+    const senha    = document.getElementById('cad-senha').value;
+    const confirma = document.getElementById('cad-confirma').value;
 
-    if (!nome)              return showAlerta('Informe seu nome.', 'erro');
-    if (!email)             return showAlerta('Informe seu e-mail.', 'erro');
-    if (senha.length < 8)   return showAlerta('A senha deve ter ao menos 8 caracteres.', 'erro');
-    if (senha !== confirma) return showAlerta('As senhas não coincidem.', 'erro');
+    if (!nome)              return showAlerta('Informe seu nome.', 'erro');
+    if (!email)             return showAlerta('Informe seu e-mail.', 'erro');
+    if (senha.length < 8)   return showAlerta('A senha deve ter ao menos 8 caracteres.', 'erro');
+    if (senha !== confirma) return showAlerta('As senhas não coincidem.', 'erro');
 
-    try {
-      setLoading('btn-cadastrar', true);
-      const res = await fetch(`${API}/auth/cadastro`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome, email, senha })
-      });
-      const data = await res.json();
+    try {
+      setLoading('btn-cadastrar', true);
+      const res = await fetch(`${API}/auth/cadastro`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, email, senha })
+      });
+      const data = await res.json();
 
-      if (!res.ok) return showAlerta(data.erro || 'Erro ao criar conta.', 'erro');
+      if (!res.ok) return showAlerta(data.erro || 'Erro ao criar conta.', 'erro');
 
-      localStorage.setItem('versah_token', data.token);
-      localStorage.setItem('versah_usuario', JSON.stringify(data.usuario));
+      localStorage.setItem('versah_token', data.token);
+      localStorage.setItem('versah_usuario', JSON.stringify(data.usuario));
 
-      showAlerta('✓ Conta criada com sucesso! Redirecionando...', 'ok');
-      setTimeout(() => { window.location.href = 'index.html'; }, 1000);
-    } catch {
-      showAlerta('Não foi possível conectar ao servidor.', 'erro');
-    } finally {
-      setLoading('btn-cadastrar', false);
-    }
-  }
+      showAlerta('✓ Conta criada com sucesso! Redirecionando...', 'ok');
+      setTimeout(() => { window.location.href = 'index.html'; }, 1000);
+    } catch {
+      showAlerta('Não foi possível conectar ao servidor.', 'erro');
+    } finally {
+      setLoading('btn-cadastrar', false);
+    }
+  }
 
-  // ─────────────────────────────────────────────────────────
-  // UI HELPERS
-  // ─────────────────────────────────────────────────────────
-  function mostrarAba(aba) {
-    document.getElementById('form-login').style.display    = aba === 'login'    ? 'block' : 'none';
-    document.getElementById('form-cadastro').style.display = aba === 'cadastro' ? 'block' : 'none';
-    document.getElementById('tab-login').className    = 'tab-btn' + (aba === 'login'    ? ' ativo' : '');
-    document.getElementById('tab-cadastro').className = 'tab-btn' + (aba === 'cadastro' ? ' ativo' : '');
-    limparAlerta();
-  }
+  // ─────────────────────────────────────────────────────────
+  // UI HELPERS
+  // ─────────────────────────────────────────────────────────
 
-  function mostrarRecuperacao() {
-    document.getElementById('painel-auth').style.display        = 'none';
-    document.getElementById('painel-recuperacao').classList.add('visible');
-  }
+  // FIX: alterna entre abas limpando o estado corretamente
+  function mostrarAba(aba) {
+    document.getElementById('form-login').style.display    = aba === 'login'    ? 'block' : 'none';
+    document.getElementById('form-cadastro').style.display = aba === 'cadastro' ? 'block' : 'none';
+    document.getElementById('tab-login').className    = 'tab-btn' + (aba === 'login'    ? ' ativo' : '');
+    document.getElementById('tab-cadastro').className = 'tab-btn' + (aba === 'cadastro' ? ' ativo' : '');
+    limparAlerta();
+  }
 
-  function mostrarAuth() {
-    document.getElementById('painel-auth').style.display = 'block';
-    document.getElementById('painel-recuperacao').classList.remove('visible');
-  }
+  // FIX: usa display via JS (não classe CSS) para evitar conflito com display:none inline
+  function mostrarRecuperacao() {
+    document.getElementById('painel-auth').style.display          = 'none';
+    document.getElementById('painel-recuperacao').style.display   = 'block';
+    limparAlerta();
+  }
 
-  function toggleSenha(id, btn) {
-    const input = document.getElementById(id);
-    input.type = input.type === 'password' ? 'text' : 'password';
-    btn.textContent = input.type === 'password' ? '👁' : '🙈';
-  }
+  // FIX: restaura o painel de auth e garante que o form correto está visível
+  function mostrarAuth() {
+    document.getElementById('painel-recuperacao').style.display = 'none';
+    document.getElementById('painel-auth').style.display        = 'block';
+    limparAlerta();
+  }
 
-  function verificarForca(senha) {
-    const wrap = document.getElementById('forca-wrap');
-    const checklist = document.getElementById('checklist');
-    wrap.classList.add('visible');
-    checklist.classList.add('visible');
+  function toggleSenha(id, btn) {
+    const input = document.getElementById(id);
+    input.type = input.type === 'password' ? 'text' : 'password';
+    btn.textContent = input.type === 'password' ? '👁' : '🙈';
+  }
 
-    const temLen   = senha.length >= 8;
-    const temUpper = /[A-Z]/.test(senha);
-    const temNum   = /[0-9]/.test(senha);
-    const score    = [temLen, temUpper, temNum].filter(Boolean).length;
+  function verificarForca(senha) {
+    const wrap     = document.getElementById('forca-wrap');
+    const checklist = document.getElementById('checklist');
+    wrap.classList.add('visible');
+    checklist.classList.add('visible');
 
-    ['chk-len', 'chk-upper', 'chk-num'].forEach((id, i) => {
-      const ok = [temLen, temUpper, temNum][i];
-      const el = document.getElementById(id);
-      el.classList.toggle('ok', ok);
-      el.querySelector('.c').textContent = ok ? '●' : '○';
-    });
+    const temLen   = senha.length >= 8;
+    const temUpper = /[A-Z]/.test(senha);
+    const temNum   = /[0-9]/.test(senha);
+    const score    = [temLen, temUpper, temNum].filter(Boolean).length;
 
-    const cores   = ['#ef4444', '#f59e0b', '#22c55e', '#16a34a'];
-    const labels  = ['Fraca', 'Razoável', 'Boa', 'Forte'];
-    const segs    = ['f1','f2','f3','f4'];
-    segs.forEach((id, i) => {
-      document.getElementById(id).style.background = i < score ? cores[score - 1] : 'var(--border)';
-    });
-    document.getElementById('forca-label').textContent = labels[score - 1] || 'Fraca';
-  }
+    ['chk-len', 'chk-upper', 'chk-num'].forEach((id, i) => {
+      const ok = [temLen, temUpper, temNum][i];
+      const el = document.getElementById(id);
+      el.classList.toggle('ok', ok);
+      el.querySelector('.c').textContent = ok ? '●' : '○';
+    });
 
-  function setLoading(btnId, loading) {
-    const btn = document.getElementById(btnId);
-    btn.disabled = loading;
-    btn.classList.toggle('loading', loading);
-  }
+    const cores  = ['#ef4444', '#f59e0b', '#22c55e', '#16a34a'];
+    const labels = ['Fraca', 'Razoável', 'Boa', 'Forte'];
+    ['f1','f2','f3','f4'].forEach((id, i) => {
+      document.getElementById(id).style.background = i < score ? cores[score - 1] : 'var(--border)';
+    });
+    document.getElementById('forca-label').textContent = labels[score - 1] || 'Fraca';
+  }
 
-  function showAlerta(msg, tipo) {
-    const el = document.getElementById('alerta');
-    el.textContent = msg;
-    el.className = `alerta ${tipo} show`;
-  }
+  function setLoading(btnId, loading) {
+    const btn = document.getElementById(btnId);
+    btn.disabled = loading;
+    btn.classList.toggle('loading', loading);
+  }
 
-  function limparAlerta() {
-    const el = document.getElementById('alerta');
-    el.className = 'alerta';
-    el.textContent = '';
-  }
+  function showAlerta(msg, tipo) {
+    const el = document.getElementById('alerta');
+    el.textContent = msg;
+    el.className = `alerta ${tipo} show`;
+  }
 
-  function showToast(msg, tipo = 'sucesso') {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = `toast ${tipo} show`;
-    setTimeout(() => t.classList.remove('show'), 3000);
-  }
+  function limparAlerta() {
+    const el = document.getElementById('alerta');
+    el.className = 'alerta';
+    el.textContent = '';
+  }
+
+  function showToast(msg, tipo = 'sucesso') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${tipo} show`;
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
 </script>
 </body>
 </html>
