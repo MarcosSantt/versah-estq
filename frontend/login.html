@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Versah | EstoqueControl</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -214,7 +217,6 @@
         <button class="tab-btn" id="tab-cadastro" onclick="mostrarAba('cadastro')">Criar conta</button>
       </div>
 
-      <!-- ── Formulário de Login ── -->
       <div id="form-login">
         <div class="form-group">
           <label>E-mail</label>
@@ -239,7 +241,6 @@
         </button>
       </div>
 
-      <!-- ── Formulário de Cadastro ── -->
       <div id="form-cadastro" style="display:none">
         <div class="form-group">
           <label>Nome completo</label>
@@ -292,7 +293,6 @@
       </div>
     </div>
 
-    <!-- ── Painel de recuperação ── -->
     <div class="recovery-panel" id="painel-recuperacao">
       <button class="recovery-back" onclick="mostrarAuth()">← Voltar</button>
       <div class="recovery-title">Recuperar senha</div>
@@ -311,10 +311,11 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  // ── URL base do backend ───────────────────────────────────
-  // Em desenvolvimento local: http://localhost:3000
-  // Em produção: troque pelo domínio do seu servidor
-  const API = 'http://localhost:3000/api';
+  // ── CONFIGURAÇÃO DO SUPABASE ──────────────────────────────
+  // COLE SUAS CREDENCIAIS AQUI DENTRO DAS ASPAS
+  const supabaseUrl = ' https://tjwjmtkhbdhuskorwygi.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqd2ptdGtoYmRodXNrb3J3eWdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4MTcyNjUsImV4cCI6MjA5NzM5MzI2NX0.5Nj9HV5sPCgGKiyJFuHRBqBdpGz2-Xrx3Lq0_yrhltw';
+  const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
   // ── Redireciona para o estoque se já estiver logado ──────
   if (localStorage.getItem('versah_token')) {
@@ -333,23 +334,27 @@
 
     try {
       setLoading('btn-entrar', true);
-      const res = await fetch(`${API}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, senha })
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: senha,
       });
-      const data = await res.json();
 
-      if (!res.ok) return showAlerta(data.erro || 'Erro ao autenticar.', 'erro');
+      if (error) {
+        let msg = 'Erro ao autenticar.';
+        if (error.message.includes('Invalid login')) msg = 'E-mail ou senha incorretos.';
+        return showAlerta(msg, 'erro');
+      }
 
-      // Salva token e dados do usuário no localStorage
-      localStorage.setItem('versah_token', data.token);
-      localStorage.setItem('versah_usuario', JSON.stringify(data.usuario));
+      // Salva token e dados para o seu index.html funcionar
+      localStorage.setItem('versah_token', data.session.access_token);
+      localStorage.setItem('versah_usuario', JSON.stringify(data.user));
 
       showAlerta('✓ Login realizado! Redirecionando...', 'ok');
       setTimeout(() => { window.location.href = 'index.html'; }, 800);
-    } catch {
-      showAlerta('Não foi possível conectar ao servidor. Verifique se o backend está rodando.', 'erro');
+      
+    } catch (err) {
+      showAlerta('Não foi possível conectar ao servidor.', 'erro');
     } finally {
       setLoading('btn-entrar', false);
     }
@@ -372,21 +377,32 @@
 
     try {
       setLoading('btn-cadastrar', true);
-      const res = await fetch(`${API}/auth/cadastro`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome, email, senha })
+      
+      const { data, error } = await supabase.auth.signUp({
+        email: email,
+        password: senha,
+        options: {
+          data: { nome: nome } // Salva o nome do usuário no Supabase
+        }
       });
-      const data = await res.json();
 
-      if (!res.ok) return showAlerta(data.erro || 'Erro ao criar conta.', 'erro');
+      if (error) {
+        let msg = error.message;
+        if (msg.includes('already registered')) msg = 'Este e-mail já está em uso.';
+        return showAlerta(msg, 'erro');
+      }
 
-      localStorage.setItem('versah_token', data.token);
-      localStorage.setItem('versah_usuario', JSON.stringify(data.usuario));
+      // O Supabase pode exigir confirmação de e-mail dependendo da configuração
+      if (data.session) {
+        localStorage.setItem('versah_token', data.session.access_token);
+        localStorage.setItem('versah_usuario', JSON.stringify(data.user));
+        showAlerta('✓ Conta criada com sucesso! Redirecionando...', 'ok');
+        setTimeout(() => { window.location.href = 'index.html'; }, 1000);
+      } else {
+        showAlerta('✓ Conta criada! Verifique seu e-mail para confirmar o cadastro.', 'ok');
+      }
 
-      showAlerta('✓ Conta criada com sucesso! Redirecionando...', 'ok');
-      setTimeout(() => { window.location.href = 'index.html'; }, 1000);
-    } catch {
+    } catch (err) {
       showAlerta('Não foi possível conectar ao servidor.', 'erro');
     } finally {
       setLoading('btn-cadastrar', false);
@@ -394,7 +410,7 @@
   }
 
   // ─────────────────────────────────────────────────────────
-  // UI HELPERS
+  // UI HELPERS (Não foram alterados)
   // ─────────────────────────────────────────────────────────
   function mostrarAba(aba) {
     document.getElementById('form-login').style.display    = aba === 'login'    ? 'block' : 'none';
