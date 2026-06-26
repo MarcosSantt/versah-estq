@@ -312,7 +312,6 @@
 
 <script>
   // ── CONFIGURAÇÃO DO SUPABASE ──────────────────────────────
-  // COLE SUAS CREDENCIAIS AQUI DENTRO DAS ASPAS
   const supabaseUrl = ' https://tjwjmtkhbdhuskorwygi.supabase.co';
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRqd2ptdGtoYmRodXNrb3J3eWdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4MTcyNjUsImV4cCI6MjA5NzM5MzI2NX0.5Nj9HV5sPCgGKiyJFuHRBqBdpGz2-Xrx3Lq0_yrhltw';
   const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -346,15 +345,13 @@
         return showAlerta(msg, 'erro');
       }
 
-      // Salva token e dados para o seu index.html funcionar
       localStorage.setItem('versah_token', data.session.access_token);
       localStorage.setItem('versah_usuario', JSON.stringify(data.user));
 
       showAlerta('✓ Login realizado! Redirecionando...', 'ok');
       setTimeout(() => { window.location.href = 'index.html'; }, 800);
-      
-    } catch (err) {
-      showAlerta('Não foi possível conectar ao servidor.', 'erro');
+    } catch {
+      showAlerta('Não foi possível conectar ao servidor. Verifique se o backend está rodando.', 'erro');
     } finally {
       setLoading('btn-entrar', false);
     }
@@ -382,17 +379,12 @@
         email: email,
         password: senha,
         options: {
-          data: { nome: nome } // Salva o nome do usuário no Supabase
+          data: { nome: nome }
         }
       });
 
-      if (error) {
-        let msg = error.message;
-        if (msg.includes('already registered')) msg = 'Este e-mail já está em uso.';
-        return showAlerta(msg, 'erro');
-      }
+      if (error) return showAlerta(error.message || 'Erro ao criar conta.', 'erro');
 
-      // O Supabase pode exigir confirmação de e-mail dependendo da configuração
       if (data.session) {
         localStorage.setItem('versah_token', data.session.access_token);
         localStorage.setItem('versah_usuario', JSON.stringify(data.user));
@@ -401,8 +393,7 @@
       } else {
         showAlerta('✓ Conta criada! Verifique seu e-mail para confirmar o cadastro.', 'ok');
       }
-
-    } catch (err) {
+    } catch {
       showAlerta('Não foi possível conectar ao servidor.', 'erro');
     } finally {
       setLoading('btn-cadastrar', false);
@@ -410,7 +401,7 @@
   }
 
   // ─────────────────────────────────────────────────────────
-  // UI HELPERS (Não foram alterados)
+  // UI HELPERS
   // ─────────────────────────────────────────────────────────
   function mostrarAba(aba) {
     document.getElementById('form-login').style.display    = aba === 'login'    ? 'block' : 'none';
