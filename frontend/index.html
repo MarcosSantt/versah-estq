@@ -38,7 +38,6 @@
     ::-webkit-scrollbar-track { background: var(--bg); }
     ::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 99px; }
 
-    /* ── Header ── */
     #header {
       background: #6A6658;
       border-bottom: 3px solid var(--accent);
@@ -64,10 +63,8 @@
     }
     .btn-logout:hover { background: rgba(255,255,255,0.1); }
 
-    /* ── Container ── */
     #app { max-width: 1100px; margin: 0 auto; padding: 32px 24px 0; }
 
-    /* ── KPI Cards ── */
     #kpi-grid {
       display: grid; grid-template-columns: repeat(3, 1fr);
       gap: 16px; margin-bottom: 28px;
@@ -87,7 +84,6 @@
     .kpi-value { font-family: var(--mono); font-size: 28px; font-weight: 700; color: var(--bright); }
     .kpi-label { font-size: 12px; color: var(--subtle); margin-top: 2px; }
 
-    /* ── Botões ── */
     button { cursor: pointer; transition: filter 0.15s, transform 0.1s; font-family: var(--sans); }
     button:hover { filter: brightness(1.1); transform: translateY(-1px); }
     button:active { transform: translateY(0); }
@@ -103,7 +99,6 @@
       color: var(--secondary); font-size: 14px; font-weight: 600; background: var(--surface);
     }
 
-    /* ── Formulário ── */
     #form-panel {
       background: var(--surface); border: 1px solid var(--border);
       border-top: 3px solid var(--accent); border-radius: 16px;
@@ -138,7 +133,6 @@
     .calc-preview strong { color: var(--accent); font-size: 16px; margin: 0 4px; }
     .form-actions { display: flex; gap: 12px; margin-top: 24px; }
 
-    /* ── Filtros ── */
     #filtros { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
     #filtros span { color: var(--subtle); font-size: 13px; margin-right: 4px; }
     .filtro-btn {
@@ -149,7 +143,6 @@
     .filtro-btn.ativo-todos  { background: var(--primary); color: #fff; border-color: var(--primary); }
     .filtro-btn.ativo-alerta { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
 
-    /* ── Tabela ── */
     #tabela-wrap {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 16px; overflow: hidden;
@@ -177,9 +170,7 @@
     .cell-nome { font-weight: 600; display: flex; align-items: center; gap: 8px; }
     .dot { color: var(--red); font-size: 8px; }
     .cell-mono { font-family: var(--mono); font-size: 14px; color: var(--secondary); }
-    .cell-atual {
-      font-family: var(--mono); font-size: 18px; font-weight: 700; color: var(--bright);
-    }
+    .cell-atual { font-family: var(--mono); font-size: 18px; font-weight: 700; color: var(--bright); }
     .cell-atual.alerta { color: var(--red); }
     .cell-comprar { font-family: var(--mono); font-size: 16px; font-weight: 700; }
     .cell-comprar.need { color: var(--accent); }
@@ -208,7 +199,6 @@
 
     .empty-state { text-align: center; color: var(--muted); padding: 48px 16px; font-size: 14px; }
 
-    /* ── Histórico ── */
     #historico-panel {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 16px; padding: 24px; margin-top: 24px;
@@ -229,7 +219,6 @@
     .hist-obs  { font-size: 12px; color: var(--subtle); font-style: italic; }
     .hist-hora { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-left: auto; }
 
-    /* ── Modais ── */
     .modal-overlay {
       display: none; position: fixed; inset: 0;
       background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
@@ -244,7 +233,6 @@
     .modal-info  { font-size: 14px; color: var(--secondary); margin-bottom: 20px; }
     .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
 
-    /* Spinner de carregamento da página */
     #loading-overlay {
       position: fixed; inset: 0; background: var(--bg);
       display: flex; align-items: center; justify-content: center;
@@ -258,7 +246,6 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .loading-text { font-family: var(--mono); font-size: 13px; color: var(--subtle); }
 
-    /* Toast */
     .toast {
       position: fixed; bottom: 24px; right: 24px;
       background: var(--bright); color: #fff;
@@ -288,13 +275,11 @@
 </head>
 <body>
 
-<!-- Overlay de carregamento inicial -->
 <div id="loading-overlay">
   <div class="page-spinner"></div>
-  <div class="loading-text">Carregando estoque...</div>
+  <div class="loading-text" id="loading-text">Carregando estoque...</div>
 </div>
 
-<!-- ── Header ── -->
 <div id="header">
   <div>
     <div class="header-logo">
@@ -311,10 +296,7 @@
   </div>
 </div>
 
-<!-- ── App ── -->
 <div id="app">
-
-  <!-- KPIs -->
   <div id="kpi-grid">
     <div class="kpi-card">
       <div class="kpi-icon" style="background:#F4F3EF">📦</div>
@@ -338,29 +320,24 @@
     </div>
   </div>
 
-  <!-- Formulário de novo/editar item -->
   <div id="form-panel">
     <h3 id="form-title">+ Novo Material</h3>
     <div class="form-grid">
       <div class="full">
         <label>Nome do material</label>
-        <input type="text" id="f-nome" placeholder="Ex: Luvas descartáveis P"
-               oninput="atualizarPreview()" />
+        <input type="text" id="f-nome" placeholder="Ex: Luvas descartáveis P" oninput="atualizarPreview()" />
       </div>
       <div>
         <label>Estoque mínimo</label>
-        <input type="number" id="f-minimo" min="0" placeholder="0"
-               oninput="atualizarPreview()" />
+        <input type="number" id="f-minimo" min="0" placeholder="0" oninput="atualizarPreview()" />
       </div>
       <div>
         <label>Estoque atual</label>
-        <input type="number" id="f-atual" min="0" placeholder="0"
-               oninput="atualizarPreview()" />
+        <input type="number" id="f-atual" min="0" placeholder="0" oninput="atualizarPreview()" />
       </div>
       <div>
         <label>Estoque ideal</label>
-        <input type="number" id="f-ideal" min="0" placeholder="0"
-               oninput="atualizarPreview()" />
+        <input type="number" id="f-ideal" min="0" placeholder="0" oninput="atualizarPreview()" />
       </div>
       <div class="calc-preview">
         Comprar: <strong id="preview-comprar">0</strong> unidades
@@ -372,7 +349,6 @@
     </div>
   </div>
 
-  <!-- Tabela -->
   <div id="tabela-wrap">
     <div class="tabela-header">
       <div>
@@ -403,22 +379,16 @@
     </table>
   </div>
 
-  <!-- Histórico -->
   <div id="historico-panel">
     <h3>⟳ Histórico de Movimentações</h3>
     <div id="historico-lista"></div>
   </div>
-
 </div>
 
-<!-- Modal: Confirmar exclusão -->
 <div class="modal-overlay" id="modal-delete" onclick="fecharModalDelete(event)">
   <div class="modal-box">
     <div class="modal-title">Remover item</div>
-    <p class="modal-info">
-      Tem certeza que deseja remover <strong id="delete-nome-item"></strong>?
-      Esta ação não pode ser desfeita.
-    </p>
+    <p class="modal-info">Tem certeza que deseja remover <strong id="delete-nome-item"></strong>? Esta ação não pode ser desfeita.</p>
     <div class="modal-actions">
       <button class="btn-primary" style="background:var(--red)" onclick="confirmarDelete()">Remover</button>
       <button class="btn-secondary" onclick="document.getElementById('modal-delete').style.display='none'">Cancelar</button>
@@ -426,7 +396,6 @@
   </div>
 </div>
 
-<!-- Modal: Movimentação -->
 <div class="modal-overlay" id="modal-mov" onclick="fecharModalMov(event)">
   <div class="modal-box" id="modal-mov-box">
     <div class="modal-title" id="modal-mov-titulo"></div>
@@ -451,10 +420,9 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  // ── Configuração da API ──────────────────────────────────
-  const API = 'http://localhost:3000/api';
+  // ── FIX: URL correta do backend em produção ──
+  const API = 'https://versah-backend.onrender.com/api';
 
-  // ── Estado da aplicação ──────────────────────────────────
   let items     = [];
   let historico = [];
   let editandoId = null;
@@ -463,7 +431,6 @@
   let deleteId   = null;
   let filtro     = 'todos';
 
-  // ── Helper: headers com JWT ──────────────────────────────
   function authHeaders() {
     const token = localStorage.getItem('versah_token');
     return {
@@ -472,7 +439,10 @@
     };
   }
 
-  // ── Verifica autenticação ao carregar ────────────────────
+  // ── FIX: inicializar sem validar token no backend ──
+  // Confia no token salvo localmente; só redireciona se não existir.
+  // Isso evita o loop causado pelo servidor adormecido rejeitar o token
+  // no momento exato do carregamento da página.
   async function inicializar() {
     const token   = localStorage.getItem('versah_token');
     const usuario = JSON.parse(localStorage.getItem('versah_usuario') || 'null');
@@ -482,28 +452,47 @@
       return;
     }
 
-    // Exibe o nome do usuário no header
-    const sub = document.getElementById('header-sub');
-    sub.textContent = `Logado como: ${usuario.nome} (${usuario.email})`;
+    document.getElementById('header-sub').textContent =
+      `Logado como: ${usuario.nome} (${usuario.email})`;
 
-    // Carrega dados do backend
+    // Mostra mensagem de espera se o servidor demorar
+    let seg = 0;
+    const loadTimer = setInterval(() => {
+      seg++;
+      if (seg >= 5) {
+        document.getElementById('loading-text').textContent =
+          `Aguardando servidor... (${seg}s)`;
+      }
+    }, 1000);
+
     await Promise.all([carregarEstoque(), carregarHistorico()]);
+    clearInterval(loadTimer);
     document.getElementById('loading-overlay').style.display = 'none';
   }
 
-  // ── CARREGAR ESTOQUE ─────────────────────────────────────
   async function carregarEstoque() {
     try {
       const res = await fetch(`${API}/estoque`, { headers: authHeaders() });
-      if (res.status === 401) { logout(); return; }
+
+      // FIX: só faz logout se receber 401 — não em qualquer erro de rede
+      if (res.status === 401) {
+        logout();
+        return;
+      }
+
+      if (!res.ok) {
+        showErro('Erro ao carregar estoque. Tente recarregar a página.');
+        return;
+      }
+
       items = await res.json();
       render();
     } catch {
+      // Erro de rede (servidor dormindo) — não desloga, só avisa
       showErro('Não foi possível carregar o estoque. Verifique a conexão.');
     }
   }
 
-  // ── CARREGAR HISTÓRICO ───────────────────────────────────
   async function carregarHistorico() {
     try {
       const res = await fetch(`${API}/historico`, { headers: authHeaders() });
@@ -515,7 +504,6 @@
     }
   }
 
-  // ── LOGOUT ───────────────────────────────────────────────
   function logout() {
     localStorage.removeItem('versah_token');
     localStorage.removeItem('versah_usuario');
@@ -524,9 +512,6 @@
 
   document.getElementById('btn-sair').addEventListener('click', logout);
 
-  // ─────────────────────────────────────────────────────────
-  // RENDERIZAÇÃO
-  // ─────────────────────────────────────────────────────────
   function calcularItem(item) {
     const quantidadeComprar = Math.max(0, item.ideal - item.atual);
     const precisaReposicao  = item.atual <= item.minimo;
@@ -611,9 +596,6 @@
     }).join('');
   }
 
-  // ─────────────────────────────────────────────────────────
-  // FILTRO
-  // ─────────────────────────────────────────────────────────
   function setFiltro(f) {
     filtro = f;
     document.getElementById('btn-filtro-todos').className  = 'filtro-btn' + (f === 'todos'  ? ' ativo-todos'  : '');
@@ -621,9 +603,6 @@
     render();
   }
 
-  // ─────────────────────────────────────────────────────────
-  // FORMULÁRIO
-  // ─────────────────────────────────────────────────────────
   function abrirFormNovo() {
     editandoId = null;
     document.getElementById('form-title').textContent = '+ Novo Material';
@@ -675,14 +654,12 @@
       let res;
       if (editandoId !== null) {
         res = await fetch(`${API}/estoque/${editandoId}`, {
-          method: 'PUT',
-          headers: authHeaders(),
+          method: 'PUT', headers: authHeaders(),
           body: JSON.stringify({ nome, minimo, atual, ideal })
         });
       } else {
         res = await fetch(`${API}/estoque`, {
-          method: 'POST',
-          headers: authHeaders(),
+          method: 'POST', headers: authHeaders(),
           body: JSON.stringify({ nome, minimo, atual, ideal })
         });
       }
@@ -702,9 +679,6 @@
     }
   }
 
-  // ─────────────────────────────────────────────────────────
-  // EXCLUSÃO
-  // ─────────────────────────────────────────────────────────
   function pedirDelete(id) {
     const item = items.find(i => i.id === id);
     if (!item) return;
@@ -717,11 +691,9 @@
     if (deleteId === null) return;
     try {
       const res = await fetch(`${API}/estoque/${deleteId}`, {
-        method: 'DELETE',
-        headers: authHeaders()
+        method: 'DELETE', headers: authHeaders()
       });
       if (!res.ok) { const d = await res.json(); return showErro(d.erro || 'Erro ao remover.'); }
-
       items = items.filter(i => i.id !== deleteId);
       historico = historico.filter(h => h.item_id !== deleteId);
       deleteId = null;
@@ -739,26 +711,17 @@
       document.getElementById('modal-delete').style.display = 'none';
   }
 
-  // ─────────────────────────────────────────────────────────
-  // MOVIMENTAÇÃO (ENTRADA / SAÍDA)
-  // ─────────────────────────────────────────────────────────
   function abrirMov(id, tipo) {
     const item = items.find(i => i.id === id);
     if (!item) return;
     movId   = id;
     movTipo = tipo;
     const isEntrada = tipo === 'ENTRADA';
-
-    document.getElementById('modal-mov-titulo').textContent =
-      isEntrada ? '▲ Registrar Entrada' : '▼ Registrar Saída';
-    document.getElementById('modal-mov-titulo').style.color =
-      isEntrada ? 'var(--green)' : 'var(--red)';
-    document.getElementById('modal-mov-box').style.borderTop =
-      `3px solid ${isEntrada ? 'var(--green)' : 'var(--red)'}`;
-    document.getElementById('modal-mov-info').innerHTML =
-      `${esc(item.nome)} — Atual: <strong style="color:var(--secondary)">${item.atual}</strong>`;
-    document.getElementById('modal-mov-btn').style.background =
-      isEntrada ? 'var(--green)' : 'var(--red)';
+    document.getElementById('modal-mov-titulo').textContent = isEntrada ? '▲ Registrar Entrada' : '▼ Registrar Saída';
+    document.getElementById('modal-mov-titulo').style.color = isEntrada ? 'var(--green)' : 'var(--red)';
+    document.getElementById('modal-mov-box').style.borderTop = `3px solid ${isEntrada ? 'var(--green)' : 'var(--red)'}`;
+    document.getElementById('modal-mov-info').innerHTML = `${esc(item.nome)} — Atual: <strong style="color:var(--secondary)">${item.atual}</strong>`;
+    document.getElementById('modal-mov-btn').style.background = isEntrada ? 'var(--green)' : 'var(--red)';
     document.getElementById('modal-mov-qtd').value = '';
     document.getElementById('modal-mov-obs').value = '';
     document.getElementById('modal-mov').style.display = 'flex';
@@ -768,24 +731,17 @@
   async function confirmarMov() {
     const qtd = parseInt(document.getElementById('modal-mov-qtd').value, 10);
     const obs = document.getElementById('modal-mov-obs').value.trim();
-
     if (!qtd || qtd <= 0) return showErro('Informe uma quantidade válida.');
-
     try {
       const res = await fetch(`${API}/estoque/${movId}/mover`, {
-        method: 'POST',
-        headers: authHeaders(),
+        method: 'POST', headers: authHeaders(),
         body: JSON.stringify({ tipo: movTipo, quantidade: qtd, observacao: obs })
       });
       const data = await res.json();
       if (!res.ok) return showErro(data.erro || 'Erro na movimentação.');
-
-      // Atualiza item localmente com o valor retornado pelo backend
       items = items.map(i => i.id === movId ? data : i);
-
       document.getElementById('modal-mov').style.display = 'none';
       render();
-      // Recarrega histórico do backend para exibir a nova entrada
       await carregarHistorico();
       showToast(movTipo === 'ENTRADA' ? '▲ Entrada registrada.' : '▼ Saída registrada.');
     } catch {
@@ -798,9 +754,6 @@
       document.getElementById('modal-mov').style.display = 'none';
   }
 
-  // ─────────────────────────────────────────────────────────
-  // UTILIDADES
-  // ─────────────────────────────────────────────────────────
   function esc(str) {
     return String(str)
       .replace(/&/g,'&amp;').replace(/</g,'&lt;')
@@ -815,8 +768,7 @@
       background:'#ef4444', color:'#fff', padding:'12px 24px',
       borderRadius:'10px', fontSize:'14px', fontWeight:'600',
       zIndex:'9999', boxShadow:'0 8px 30px rgba(0,0,0,0.15)',
-      animation:'fadein 0.2s ease',
-      width:'90%', maxWidth:'400px', textAlign:'center'
+      animation:'fadein 0.2s ease', width:'90%', maxWidth:'400px', textAlign:'center'
     });
     document.body.appendChild(el);
     setTimeout(() => el.remove(), 3000);
@@ -831,9 +783,6 @@
     toastTimeout = setTimeout(() => t.classList.remove('show'), 3500);
   }
 
-  // ─────────────────────────────────────────────────────────
-  // INICIALIZAÇÃO
-  // ─────────────────────────────────────────────────────────
   inicializar();
 </script>
 </body>
