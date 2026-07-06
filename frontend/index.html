@@ -74,8 +74,14 @@
       border-radius: 14px; padding: 20px 24px;
       display: flex; align-items: center; gap: 16px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+      transition: transform 0.2s, box-shadow 0.2s;
     }
     .kpi-card.alerta { border-color: #ef444444; box-shadow: 0 0 20px #ef444415; }
+    
+    /* Novo estilo para o cartão de alerta clicável */
+    #kpi-alerta { cursor: pointer; }
+    #kpi-alerta:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(239, 68, 68, 0.2); }
+
     .kpi-icon {
       width: 48px; height: 48px; border-radius: 12px;
       display: flex; align-items: center; justify-content: center;
@@ -339,17 +345,18 @@
         <div class="kpi-label">Itens cadastrados</div>
       </div>
     </div>
-    <div class="kpi-card" id="kpi-alerta">
+    <div class="kpi-card" id="kpi-alerta" onclick="setFiltro('alerta')" title="Filtrar itens em reposição">
       <div class="kpi-icon" style="background:#fee2e2">⚠️</div>
       <div>
         <div class="kpi-value" id="kpi-alerta-val">—</div>
-        <div class="kpi-label">Unidades a comprar</div>
+        <div class="kpi-label">Itens para Repor</div>
       </div>
     </div>
     <div class="kpi-card">
       <div class="kpi-icon" style="background:#fef9ec">🛒</div>
       <div>
         <div class="kpi-value" id="kpi-comprar-val">—</div>
+        <div class="kpi-label">Volume de compras</div>
       </div>
     </div>
   </div>
