@@ -3,17 +3,17 @@
  * Node.js + Express + PostgreSQL + JWT
  * ─────────────────────────────────────
  * Rotas:
- *   POST   /api/auth/cadastro       — cria conta
- *   POST   /api/auth/login          — autentica e devolve JWT
- *   GET    /api/auth/me             — retorna dados do usuário logado
+ * POST   /api/auth/cadastro       — cria conta
+ * POST   /api/auth/login          — autentica e devolve JWT
+ * GET    /api/auth/me             — retorna dados do usuário logado
  *
- *   GET    /api/estoque             — lista itens do usuário logado
- *   POST   /api/estoque             — cria item
- *   PUT    /api/estoque/:id         — edita item
- *   DELETE /api/estoque/:id         — remove item
- *   POST   /api/estoque/:id/mover   — registra entrada ou saída
+ * GET    /api/estoque             — lista itens do usuário logado
+ * POST   /api/estoque             — cria item
+ * PUT    /api/estoque/:id         — edita item
+ * DELETE /api/estoque/:id         — remove item
+ * POST   /api/estoque/:id/mover   — registra entrada ou saída
  *
- *   GET    /api/historico           — últimas 50 movimentações do usuário
+ * GET    /api/historico           — últimas 50 movimentações do usuário
  */
 
 const express   = require('express');
@@ -214,21 +214,44 @@ app.put('/api/estoque/:id', autenticar, async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────
-// ESTOQUE — Remover item
+// ESTOQUE — Remover item (e seu histórico de movimentações)
 // ─────────────────────────────────────────────────────────
 app.delete('/api/estoque/:id', autenticar, async (req, res) => {
   const itemId = parseInt(req.params.id);
+  const client = await pool.connect();
   try {
-    const result = await pool.query(
-      'DELETE FROM estoque_items WHERE id = $1 AND usuario_id = $2 RETURNING id',
+    await client.query('BEGIN');
+
+    // Confirma que o item existe e pertence ao usuário logado
+    const itemResult = await client.query(
+      'SELECT id FROM estoque_items WHERE id = $1 AND usuario_id = $2 FOR UPDATE',
       [itemId, req.usuario.id]
     );
-    if (result.rows.length === 0)
+    if (itemResult.rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({ erro: 'Item não encontrado ou sem permissão.' });
-    res.json({ mensagem: 'Item removido com sucesso.' });
+    }
+
+    // Remove o histórico de movimentações desse item primeiro
+    await client.query(
+      'DELETE FROM historico_movimentacoes WHERE item_id = $1 AND usuario_id = $2',
+      [itemId, req.usuario.id]
+    );
+
+    // Remove o item do estoque
+    await client.query(
+      'DELETE FROM estoque_items WHERE id = $1 AND usuario_id = $2',
+      [itemId, req.usuario.id]
+    );
+
+    await client.query('COMMIT');
+    res.json({ mensagem: 'Item e histórico removidos com sucesso.' });
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error('Erro ao remover item:', err);
     res.status(500).json({ erro: 'Erro ao remover item.' });
+  } finally {
+    client.release();
   }
 });
 
