@@ -159,12 +159,28 @@
     }
     .tabela-title { font-family: var(--mono); font-size: 14px; color: var(--dim); letter-spacing: 0.05em; }
     table { width: 100%; border-collapse: collapse; }
+    
+    /* Alteração no th para ordenação */
     thead th {
       padding: 14px 16px; text-align: left;
       font-family: var(--mono); font-size: 11px; color: var(--muted);
       letter-spacing: 0.08em; text-transform: uppercase;
       background: var(--bg); border-bottom: 1px solid var(--border);
     }
+    .th-sortable {
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.2s;
+    }
+    .th-sortable:hover {
+      color: var(--primary);
+    }
+    .sort-icon {
+      font-size: 10px;
+      margin-left: 4px;
+      color: var(--accent);
+    }
+
     tbody td { padding: 16px; border-bottom: 1px solid var(--bg); vertical-align: middle; }
     tbody tr:last-child td { border-bottom: none; }
     tbody tr:hover { background: #fafaf8; }
@@ -383,12 +399,12 @@
       <table>
         <thead>
           <tr>
-            <th>Material</th>
-            <th>Mínimo</th>
-            <th>Atual</th>
-            <th>Ideal</th>
-            <th>A comprar</th>
-            <th>Status</th>
+            <th class="th-sortable" onclick="ordenarPor('nome')">Material <span id="sort-nome" class="sort-icon"></span></th>
+            <th class="th-sortable" onclick="ordenarPor('minimo')">Mínimo <span id="sort-minimo" class="sort-icon"></span></th>
+            <th class="th-sortable" onclick="ordenarPor('atual')">Atual <span id="sort-atual" class="sort-icon"></span></th>
+            <th class="th-sortable" onclick="ordenarPor('ideal')">Ideal <span id="sort-ideal" class="sort-icon"></span></th>
+            <th class="th-sortable" onclick="ordenarPor('comprar')">A comprar <span id="sort-comprar" class="sort-icon"></span></th>
+            <th class="th-sortable" onclick="ordenarPor('status')">Status <span id="sort-status" class="sort-icon"></span></th>
             <th>Ações</th>
           </tr>
         </thead>
@@ -443,13 +459,17 @@
   // ── FIX: URL correta do backend em produção ──
   const API = 'https://versah-backend.onrender.com/api';
 
-  let items     = [];
-  let historico = [];
+  let items      = [];
+  let historico  = [];
   let editandoId = null;
   let movId      = null;
   let movTipo    = null;
   let deleteId   = null;
   let filtro     = 'todos';
+  
+  // ── Variáveis para controle de ordenação ──
+  let sortCol = 'nome';
+  let sortAsc = true;
 
   function authHeaders() {
     const token = localStorage.getItem('versah_token');
@@ -460,9 +480,6 @@
   }
 
   // ── FIX: inicializar sem validar token no backend ──
-  // Confia no token salvo localmente; só redireciona se não existir.
-  // Isso evita o loop causado pelo servidor adormecido rejeitar o token
-  // no momento exato do carregamento da página.
   async function inicializar() {
     const token   = localStorage.getItem('versah_token');
     const usuario = JSON.parse(localStorage.getItem('versah_usuario') || 'null');
@@ -475,7 +492,6 @@
     document.getElementById('header-sub').textContent =
       `Logado como: ${usuario.nome} (${usuario.email})`;
 
-    // Mostra mensagem de espera se o servidor demorar
     let seg = 0;
     const loadTimer = setInterval(() => {
       seg++;
@@ -494,7 +510,6 @@
     try {
       const res = await fetch(`${API}/estoque`, { headers: authHeaders() });
 
-      // FIX: só faz logout se receber 401 — não em qualquer erro de rede
       if (res.status === 401) {
         logout();
         return;
@@ -508,7 +523,6 @@
       items = await res.json();
       render();
     } catch {
-      // Erro de rede (servidor dormindo) — não desloga, só avisa
       showErro('Não foi possível carregar o estoque. Verifique a conexão.');
     }
   }
@@ -541,6 +555,16 @@
     return { ...item, quantidadeComprar, precisaReposicao, percentual };
   }
 
+  function ordenarPor(col) {
+    if (sortCol === col) {
+      sortAsc = !sortAsc;
+    } else {
+      sortCol = col;
+      sortAsc = true;
+    }
+    render();
+  }
+
   function render() {
     const calculados   = items.map(calcularItem);
     const totalAlerta  = calculados.filter(i => i.precisaReposicao).length;
@@ -552,9 +576,39 @@
     document.getElementById('kpi-alerta').classList.toggle('alerta', totalAlerta > 0);
     document.getElementById('btn-filtro-alerta').textContent = `⚠ Reposição (${totalAlerta})`;
 
-    const filtrados = filtro === 'alerta'
+    let filtrados = filtro === 'alerta'
       ? calculados.filter(i => i.precisaReposicao)
       : calculados;
+
+    // Lógica de Ordenação
+    filtrados.sort((a, b) => {
+      let valA, valB;
+      if (sortCol === 'nome') { 
+        valA = a.nome.toLowerCase(); valB = b.nome.toLowerCase(); 
+      } else if (sortCol === 'minimo') { 
+        valA = a.minimo; valB = b.minimo; 
+      } else if (sortCol === 'atual') { 
+        valA = a.atual; valB = b.atual; 
+      } else if (sortCol === 'ideal') { 
+        valA = a.ideal; valB = b.ideal; 
+      } else if (sortCol === 'comprar') { 
+        valA = a.quantidadeComprar; valB = b.quantidadeComprar; 
+      } else if (sortCol === 'status') { 
+        valA = a.precisaReposicao ? 1 : 0; valB = b.precisaReposicao ? 1 : 0; 
+      }
+
+      if (valA < valB) return sortAsc ? -1 : 1;
+      if (valA > valB) return sortAsc ? 1 : -1;
+      return 0;
+    });
+
+    // Atualiza os ícones no cabeçalho
+    ['nome', 'minimo', 'atual', 'ideal', 'comprar', 'status'].forEach(col => {
+      const el = document.getElementById(`sort-${col}`);
+      if (el) el.textContent = '';
+    });
+    const activeSortEl = document.getElementById(`sort-${sortCol}`);
+    if (activeSortEl) activeSortEl.textContent = sortAsc ? '▲' : '▼';
 
     const tbody = document.getElementById('tabela-body');
     if (filtrados.length === 0) {
