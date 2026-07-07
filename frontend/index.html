@@ -78,7 +78,6 @@
     }
     .kpi-card.alerta { border-color: #ef444444; box-shadow: 0 0 20px #ef444415; }
 
-    /* Novo estilo para o cartão de alerta clicável */
     #kpi-alerta { cursor: pointer; }
     #kpi-alerta:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(239, 68, 68, 0.2); }
 
@@ -120,25 +119,14 @@
       color: var(--dim); font-family: var(--mono);
       letter-spacing: 0.07em; text-transform: uppercase;
     }
-    input[type=text], input[type=number] {
+    input[type=text], input[type=number], select#f-categoria {
       width: 100%; padding: 12px 14px; background: var(--surface);
       border: 1px solid var(--border); border-radius: 10px;
       color: var(--primary); font-size: 16px; font-family: var(--sans);
       transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    /* Estilo do novo select de categoria, igual aos inputs existentes */
-    select#f-categoria {
-      width: 100%; padding: 12px 14px; background: var(--surface);
-      border: 1px solid var(--border); border-radius: 10px;
-      color: var(--primary); font-size: 16px; font-family: var(--sans);
-      transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    select#f-categoria:focus {
-      outline: none; border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(195, 163, 101, 0.2);
     }
     input::placeholder { color: var(--muted); }
-    input:focus {
+    input:focus, select#f-categoria:focus {
       outline: none; border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(195, 163, 101, 0.2);
     }
@@ -159,7 +147,6 @@
     }
     .filtro-btn.ativo-todos  { background: var(--primary); color: #fff; border-color: var(--primary); }
     .filtro-btn.ativo-alerta { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
-    /* Botões de filtro por categoria (gerados dinamicamente) */
     .filtro-btn.ativo-categoria { background: #eef2f7; color: #1e3a5f; border-color: #b7c6dc; }
 
     #tabela-wrap {
@@ -179,26 +166,15 @@
     .tabela-title { font-family: var(--mono); font-size: 14px; color: var(--dim); letter-spacing: 0.05em; }
     table { width: 100%; border-collapse: collapse; }
 
-    /* Alteração no th para ordenação */
     thead th {
       padding: 14px 16px; text-align: left;
       font-family: var(--mono); font-size: 11px; color: var(--muted);
       letter-spacing: 0.08em; text-transform: uppercase;
       background: var(--bg); border-bottom: 1px solid var(--border);
     }
-    .th-sortable {
-      cursor: pointer;
-      user-select: none;
-      transition: color 0.2s;
-    }
-    .th-sortable:hover {
-      color: var(--primary);
-    }
-    .sort-icon {
-      font-size: 10px;
-      margin-left: 4px;
-      color: var(--accent);
-    }
+    .th-sortable { cursor: pointer; user-select: none; transition: color 0.2s; }
+    .th-sortable:hover { color: var(--primary); }
+    .sort-icon { font-size: 10px; margin-left: 4px; color: var(--accent); }
 
     tbody td { padding: 16px; border-bottom: 1px solid var(--bg); vertical-align: middle; }
     tbody tr:last-child td { border-bottom: none; }
@@ -224,7 +200,6 @@
     }
     .badge.ok   { background: #dcfce7; color: #15803d; }
     .badge.repor { background: #fee2e2; color: #b91c1c; }
-    /* Badge de categoria na tabela */
     .badge.categoria-badge { background: #eef2f7; color: #1e3a5f; }
 
     .action-wrap { display: flex; gap: 6px; }
@@ -274,6 +249,12 @@
     .modal-info  { font-size: 14px; color: var(--secondary); margin-bottom: 20px; }
     .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
 
+    /* Estilos Modal Categorias */
+    .cat-list { margin-top: 16px; max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; }
+    .cat-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--bg); font-size: 14px; }
+    .cat-item:last-child { border-bottom: none; }
+    .cat-item-actions { display: flex; gap: 6px; }
+
     #loading-overlay {
       position: fixed; inset: 0; background: var(--bg);
       display: flex; align-items: center; justify-content: center;
@@ -314,17 +295,9 @@
       .action-wrap { flex-wrap: wrap; }
       .modal-box { padding: 24px 20px; }
     }
-
     @media (min-width: 701px) and (max-width: 1024px) {
       #kpi-grid { grid-template-columns: repeat(2, 1fr); }
       #app { padding: 28px 20px 0; }
-    }
-
-    @media (max-width: 420px) {
-      .header-title { font-size: 17px; }
-      .header-sub { padding-left: 0; }
-      .kpi-value { font-size: 22px; }
-      .btn-primary, .btn-secondary { padding: 9px 14px; font-size: 13px; }
     }
   </style>
 </head>
@@ -396,16 +369,11 @@
         <input type="number" id="f-ideal" min="0" placeholder="0" oninput="atualizarPreview()" />
       </div>
       <div>
-        <!-- NOVO: campo de categoria/tag do material -->
         <label>Categoria</label>
-        <select id="f-categoria">
-          <option value="Sem categoria">Sem categoria</option>
-          <option value="Insumos">Insumos</option>
-          <option value="Limpeza">Limpeza</option>
-          <option value="Escritório">Escritório</option>
-          <option value="Materiais para Cirurgia">Materiais para Cirurgia</option>
-          <option value="Outros">Outros</option>
-        </select>
+        <div style="display: flex; gap: 8px;">
+          <select id="f-categoria" style="flex: 1;"></select>
+          <button type="button" class="btn-secondary" onclick="abrirModalCategorias()" style="padding: 0 14px;" title="Gerenciar Categorias">⚙️</button>
+        </div>
       </div>
       <div class="calc-preview">
         Comprar: <strong id="preview-comprar">0</strong> unidades
@@ -425,7 +393,6 @@
           <span>Filtrar:</span>
           <button id="btn-filtro-todos"  class="filtro-btn ativo-todos" onclick="setFiltro('todos')">Todos</button>
           <button id="btn-filtro-alerta" class="filtro-btn" onclick="setFiltro('alerta')">⚠ Reposição</button>
-          <!-- NOVO: botões de filtro por categoria, gerados dinamicamente em render() -->
           <span id="filtros-categorias" style="display:contents"></span>
         </div>
       </div>
@@ -490,10 +457,28 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-categorias" onclick="fecharModalCategorias(event)">
+  <div class="modal-box" style="max-width: 450px;">
+    <div class="modal-title">Gerenciar Categorias</div>
+    <p class="modal-info" style="margin-bottom: 16px;">Adicione, edite ou remova categorias do seu sistema.</p>
+    
+    <div style="display: flex; gap: 8px;">
+      <input type="text" id="nova-cat-nome" placeholder="Nova categoria..." onkeydown="if(event.key==='Enter') adicionarCategoria()" />
+      <button class="btn-primary" onclick="adicionarCategoria()">Adicionar</button>
+    </div>
+
+    <div class="cat-list" id="lista-categorias-modal">
+      </div>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="document.getElementById('modal-categorias').style.display='none'" style="width: 100%;">Concluído</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-  // ── FIX: URL correta do backend em produção ──
   const API = 'https://versah-backend.onrender.com/api';
 
   let items      = [];
@@ -504,20 +489,154 @@
   let deleteId   = null;
   let filtro     = 'todos';
 
-  // ── Variáveis para controle de ordenação ──
   let sortCol = 'nome';
   let sortAsc = true;
 
-  // ── NOVO: categorias são guardadas no localStorage (chave -> {id: categoria}) ──
-  // Isso evita mexer nas chamadas à API existentes (o backend pode não ter esse campo).
-  const CATEGORIAS_KEY = 'versah_categorias';
+  // ── Gestão de Categorias no LocalStorage ──
+  const CATEGORIAS_KEY = 'versah_categorias';       // Mapeamento: { id_do_item: 'Nome da Categoria' }
+  const LISTA_CAT_KEY  = 'versah_lista_categorias'; // Array: ['Insumos', 'Limpeza', ...]
+  
+  let listaCategoriasAtivas = [];
 
-  function getCategoriasMap() {
-    try {
-      return JSON.parse(localStorage.getItem(CATEGORIAS_KEY) || '{}');
-    } catch {
-      return {};
+  // Inicializa e carrega a lista mestre de categorias
+  function carregarListaCategorias() {
+    const salvas = localStorage.getItem(LISTA_CAT_KEY);
+    if (!salvas) {
+      // Categorias padrão se for o primeiro acesso
+      listaCategoriasAtivas = ['Sem categoria', 'Insumos', 'Limpeza', 'Escritório', 'Materiais para Cirurgia', 'Outros'];
+      salvarListaCategorias();
+    } else {
+      listaCategoriasAtivas = JSON.parse(salvas);
     }
+    atualizarSelectFormulario();
+  }
+
+  function salvarListaCategorias() {
+    localStorage.setItem(LISTA_CAT_KEY, JSON.stringify(listaCategoriasAtivas));
+    atualizarSelectFormulario();
+    renderCategoriasModal(); // Atualiza modal se estiver aberto
+    render(); // Atualiza tabela e filtros
+  }
+
+  function atualizarSelectFormulario() {
+    const select = document.getElementById('f-categoria');
+    const valorAtual = select.value;
+    select.innerHTML = listaCategoriasAtivas.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    // Tenta manter a seleção anterior, se ainda existir
+    if (listaCategoriasAtivas.includes(valorAtual)) {
+      select.value = valorAtual;
+    } else if (listaCategoriasAtivas.length > 0) {
+      select.value = listaCategoriasAtivas[0];
+    }
+  }
+
+  // Funções de CRUD das Categorias
+  function adicionarCategoria() {
+    const input = document.getElementById('nova-cat-nome');
+    const nome = input.value.trim();
+    if (!nome) return showErro('Digite um nome para a categoria.');
+    if (listaCategoriasAtivas.some(c => c.toLowerCase() === nome.toLowerCase())) {
+      return showErro('Esta categoria já existe.');
+    }
+    listaCategoriasAtivas.push(nome);
+    input.value = '';
+    salvarListaCategorias();
+    showToast('Categoria adicionada!');
+  }
+
+  function editarCategoria(nomeAntigo) {
+    if (nomeAntigo === 'Sem categoria') return showErro('Não é possível editar a categoria padrão.');
+    
+    const novoNome = prompt(`Renomear categoria "${nomeAntigo}" para:`, nomeAntigo);
+    if (!novoNome || novoNome.trim() === '' || novoNome === nomeAntigo) return;
+    
+    const nomeFinal = novoNome.trim();
+    if (listaCategoriasAtivas.some(c => c.toLowerCase() === nomeFinal.toLowerCase())) {
+      return showErro('Já existe uma categoria com este nome.');
+    }
+
+    // 1. Atualiza na lista mestre
+    const index = listaCategoriasAtivas.indexOf(nomeAntigo);
+    if (index !== -1) listaCategoriasAtivas[index] = nomeFinal;
+
+    // 2. Atualiza os itens que usavam essa categoria
+    const map = getCategoriasMap();
+    let mudouAlgum = false;
+    for (let id in map) {
+      if (map[id] === nomeAntigo) {
+        map[id] = nomeFinal;
+        mudouAlgum = true;
+      }
+    }
+    if (mudouAlgum) localStorage.setItem(CATEGORIAS_KEY, JSON.stringify(map));
+
+    // Se o filtro ativo for a categoria antiga, atualiza o filtro
+    if (filtro === nomeAntigo) filtro = nomeFinal;
+
+    salvarListaCategorias();
+    showToast('Categoria renomeada com sucesso.');
+  }
+
+  function excluirCategoria(nomeCat) {
+    if (nomeCat === 'Sem categoria') return showErro('Não é possível excluir a categoria padrão.');
+    
+    if (!confirm(`Tem certeza que deseja excluir "${nomeCat}"?\n\nOs itens que estão nessa categoria voltarão para "Sem categoria".`)) return;
+
+    // 1. Remove da lista mestre
+    listaCategoriasAtivas = listaCategoriasAtivas.filter(c => c !== nomeCat);
+
+    // 2. Transfere os itens para "Sem categoria"
+    const map = getCategoriasMap();
+    let mudouAlgum = false;
+    for (let id in map) {
+      if (map[id] === nomeCat) {
+        map[id] = 'Sem categoria';
+        mudouAlgum = true;
+      }
+    }
+    if (mudouAlgum) localStorage.setItem(CATEGORIAS_KEY, JSON.stringify(map));
+
+    // Se o filtro ativo for a excluída, reseta o filtro
+    if (filtro === nomeCat) filtro = 'todos';
+
+    salvarListaCategorias();
+    showToast('Categoria excluída.');
+  }
+
+  // Modais da Categoria
+  function abrirModalCategorias() {
+    document.getElementById('modal-categorias').style.display = 'flex';
+    document.getElementById('nova-cat-nome').focus();
+    renderCategoriasModal();
+  }
+
+  function fecharModalCategorias(e) {
+    if (e.target === document.getElementById('modal-categorias'))
+      document.getElementById('modal-categorias').style.display = 'none';
+  }
+
+  function renderCategoriasModal() {
+    const listDiv = document.getElementById('lista-categorias-modal');
+    listDiv.innerHTML = listaCategoriasAtivas.map(cat => {
+      const isPadrao = cat === 'Sem categoria';
+      return `
+        <div class="cat-item">
+          <span>${esc(cat)}</span>
+          ${isPadrao ? '<span style="color:var(--muted);font-size:12px;">(Padrão)</span>' : `
+          <div class="cat-item-actions">
+            <button class="action-btn edit" title="Editar Nome" onclick="editarCategoria('${esc(cat).replace(/'/g, "\\'")}')">✏</button>
+            <button class="action-btn del" title="Excluir" onclick="excluirCategoria('${esc(cat).replace(/'/g, "\\'")}')">✕</button>
+          </div>
+          `}
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ── Funções Auxiliares de Mapeamento (Item -> Categoria) ──
+  function getCategoriasMap() {
+    try { return JSON.parse(localStorage.getItem(CATEGORIAS_KEY) || '{}'); } 
+    catch { return {}; }
   }
   function setCategoriaItem(id, categoria) {
     const map = getCategoriasMap();
@@ -531,8 +650,11 @@
   }
   function obterCategoriaItem(id) {
     const map = getCategoriasMap();
-    return map[id] || 'Sem categoria';
+    const cat = map[id] || 'Sem categoria';
+    // Garantia extra: se a categoria do item foi apagada por fora, volta pro padrão
+    return listaCategoriasAtivas.includes(cat) ? cat : 'Sem categoria';
   }
+
 
   function authHeaders() {
     const token = localStorage.getItem('versah_token');
@@ -542,7 +664,6 @@
     };
   }
 
-  // ── FIX: inicializar sem validar token no backend ──
   async function inicializar() {
     const token   = localStorage.getItem('versah_token');
     const usuario = JSON.parse(localStorage.getItem('versah_usuario') || 'null');
@@ -552,15 +673,15 @@
       return;
     }
 
-    document.getElementById('header-sub').textContent =
-      `Logado como: ${usuario.nome} (${usuario.email})`;
+    document.getElementById('header-sub').textContent = `Logado como: ${usuario.nome} (${usuario.email})`;
+
+    carregarListaCategorias(); // Carrega antes de buscar o estoque!
 
     let seg = 0;
     const loadTimer = setInterval(() => {
       seg++;
       if (seg >= 5) {
-        document.getElementById('loading-text').textContent =
-          `Aguardando servidor... (${seg}s)`;
+        document.getElementById('loading-text').textContent = `Aguardando servidor... (${seg}s)`;
       }
     }, 1000);
 
@@ -572,17 +693,8 @@
   async function carregarEstoque() {
     try {
       const res = await fetch(`${API}/estoque`, { headers: authHeaders() });
-
-      if (res.status === 401) {
-        logout();
-        return;
-      }
-
-      if (!res.ok) {
-        showErro('Erro ao carregar estoque. Tente recarregar a página.');
-        return;
-      }
-
+      if (res.status === 401) return logout();
+      if (!res.ok) return showErro('Erro ao carregar estoque. Tente recarregar a página.');
       items = await res.json();
       render();
     } catch {
@@ -596,9 +708,7 @@
       if (!res.ok) return;
       historico = await res.json();
       renderHistorico();
-    } catch {
-      // Histórico é secundário, falha silenciosa
-    }
+    } catch {}
   }
 
   function logout() {
@@ -606,27 +716,19 @@
     localStorage.removeItem('versah_usuario');
     window.location.href = 'login.html';
   }
-
   document.getElementById('btn-sair').addEventListener('click', logout);
 
   function calcularItem(item) {
     const quantidadeComprar = Math.max(0, item.ideal - item.atual);
     const precisaReposicao  = item.atual <= item.minimo;
-    const percentual        = item.ideal > 0
-      ? Math.min(100, Math.round((item.atual / item.ideal) * 100))
-      : 0;
-    // NOVO: categoria vem do localStorage, não do backend
+    const percentual        = item.ideal > 0 ? Math.min(100, Math.round((item.atual / item.ideal) * 100)) : 0;
     const categoria = obterCategoriaItem(item.id);
     return { ...item, quantidadeComprar, precisaReposicao, percentual, categoria };
   }
 
   function ordenarPor(col) {
-    if (sortCol === col) {
-      sortAsc = !sortAsc;
-    } else {
-      sortCol = col;
-      sortAsc = true;
-    }
+    if (sortCol === col) sortAsc = !sortAsc;
+    else { sortCol = col; sortAsc = true; }
     render();
   }
 
@@ -641,7 +743,6 @@
     document.getElementById('kpi-alerta').classList.toggle('alerta', totalAlerta > 0);
     document.getElementById('btn-filtro-alerta').textContent = `⚠ Reposição (${totalAlerta})`;
 
-    // NOVO: monta os botões de filtro por categoria dinamicamente
     const categoriasPresentes = [...new Set(calculados.map(i => i.categoria))].sort((a, b) => a.localeCompare(b));
     const wrapCategorias = document.getElementById('filtros-categorias');
     wrapCategorias.innerHTML = categoriasPresentes.map(cat => {
@@ -656,31 +757,21 @@
       filtrados = calculados.filter(i => i.categoria === filtro);
     }
 
-    // Lógica de Ordenação
     filtrados.sort((a, b) => {
       let valA, valB;
-      if (sortCol === 'nome') {
-        valA = a.nome.toLowerCase(); valB = b.nome.toLowerCase();
-      } else if (sortCol === 'minimo') {
-        valA = a.minimo; valB = b.minimo;
-      } else if (sortCol === 'atual') {
-        valA = a.atual; valB = b.atual;
-      } else if (sortCol === 'ideal') {
-        valA = a.ideal; valB = b.ideal;
-      } else if (sortCol === 'comprar') {
-        valA = a.quantidadeComprar; valB = b.quantidadeComprar;
-      } else if (sortCol === 'status') {
-        valA = a.precisaReposicao ? 1 : 0; valB = b.precisaReposicao ? 1 : 0;
-      } else if (sortCol === 'categoria') {
-        valA = a.categoria.toLowerCase(); valB = b.categoria.toLowerCase();
-      }
+      if (sortCol === 'nome') { valA = a.nome.toLowerCase(); valB = b.nome.toLowerCase(); } 
+      else if (sortCol === 'minimo') { valA = a.minimo; valB = b.minimo; } 
+      else if (sortCol === 'atual') { valA = a.atual; valB = b.atual; } 
+      else if (sortCol === 'ideal') { valA = a.ideal; valB = b.ideal; } 
+      else if (sortCol === 'comprar') { valA = a.quantidadeComprar; valB = b.quantidadeComprar; } 
+      else if (sortCol === 'status') { valA = a.precisaReposicao ? 1 : 0; valB = b.precisaReposicao ? 1 : 0; } 
+      else if (sortCol === 'categoria') { valA = a.categoria.toLowerCase(); valB = b.categoria.toLowerCase(); }
 
       if (valA < valB) return sortAsc ? -1 : 1;
       if (valA > valB) return sortAsc ? 1 : -1;
       return 0;
     });
 
-    // Atualiza os ícones no cabeçalho
     ['nome', 'minimo', 'atual', 'ideal', 'comprar', 'status', 'categoria'].forEach(col => {
       const el = document.getElementById(`sort-${col}`);
       if (el) el.textContent = '';
@@ -695,8 +786,7 @@
     }
 
     tbody.innerHTML = filtrados.map(item => {
-      const corBarra = item.precisaReposicao ? '#ef4444'
-        : item.percentual < 50 ? '#f59e0b' : '#22c55e';
+      const corBarra = item.precisaReposicao ? '#ef4444' : item.percentual < 50 ? '#f59e0b' : '#22c55e';
       return `
         <tr class="${item.precisaReposicao ? 'alerta-row' : ''}">
           <td class="cell-nome">
@@ -762,7 +852,11 @@
     editandoId = null;
     document.getElementById('form-title').textContent = '+ Novo Material';
     ['f-nome','f-minimo','f-atual','f-ideal'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('f-categoria').value = 'Sem categoria';
+    
+    // Seleciona o primeiro ou "Sem categoria"
+    const catSelect = document.getElementById('f-categoria');
+    catSelect.value = listaCategoriasAtivas.includes('Sem categoria') ? 'Sem categoria' : listaCategoriasAtivas[0];
+    
     document.getElementById('preview-comprar').textContent = '0';
     document.getElementById('form-panel').classList.add('visible');
     setTimeout(() => document.getElementById('f-nome').focus(), 100);
@@ -916,9 +1010,7 @@
   }
 
   function esc(str) {
-    return String(str)
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   function showErro(msg) {
