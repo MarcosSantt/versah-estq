@@ -159,7 +159,6 @@
       -webkit-overflow-scrolling: touch;
     }
     
-    /* Novo layout do Cabeçalho da Tabela com Barra de Pesquisa */
     .tabela-header {
       padding: 20px 28px 16px;
       border-bottom: 1px solid var(--border);
@@ -276,6 +275,11 @@
     .cat-item:last-child { border-bottom: none; }
     .cat-item-actions { display: flex; gap: 6px; }
 
+    /* Estilos Tabela Modal Relatório */
+    .relatorio-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .relatorio-table td { padding: 10px 14px; border-bottom: 1px solid var(--bg); }
+    .relatorio-table tr:last-child td { border-bottom: none; }
+
     #loading-overlay {
       position: fixed; inset: 0; background: var(--bg);
       display: flex; align-items: center; justify-content: center;
@@ -318,6 +322,7 @@
       thead th, tbody td { padding: 10px 12px; }
       .action-wrap { flex-wrap: wrap; }
       .modal-box { padding: 24px 20px; }
+      .grid-relatorio { grid-template-columns: 1fr !important; }
     }
     @media (min-width: 701px) and (max-width: 1024px) {
       #kpi-grid { grid-template-columns: repeat(2, 1fr); }
@@ -414,6 +419,7 @@
       <div class="tabela-header-top">
         <div class="tabela-title">MATERIAIS E INSUMOS</div>
         <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <button class="btn-secondary" onclick="abrirModalRelatorio()">📊 Relatório</button>
           <button class="btn-secondary" onclick="abrirModalCompras()">📋 Lista de Compras</button>
           <button class="btn-primary" onclick="abrirFormNovo()">+ Novo item</button>
         </div>
@@ -537,6 +543,46 @@
   </div>
 </div>
 
+<!-- NOVO: Modal Relatório de Consumo -->
+<div class="modal-overlay" id="modal-relatorio" onclick="fecharModalRelatorio(event)">
+  <div class="modal-box" style="max-width: 700px; width: 100%;">
+    <div class="modal-title">📊 Relatório de Consumo</div>
+    <p class="modal-info">Analise as movimentações baseadas no seu histórico de estoque.</p>
+    
+    <div style="margin-bottom: 20px;">
+      <label>Período de Análise:</label>
+      <select id="filtro-dias-relatorio" onchange="renderRelatorio(parseInt(this.value))" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-family: var(--sans);">
+        <option value="15">Últimos 15 dias</option>
+        <option value="30">Últimos 30 dias</option>
+        <option value="0">Todo o histórico disponível</option>
+      </select>
+    </div>
+
+    <div class="grid-relatorio" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div>
+        <h4 style="font-family:var(--mono); color:var(--red); font-size: 13px; margin-bottom: 8px;">⬇️ MAIS RETIRADOS (SAÍDAS)</h4>
+        <div style="border: 1px solid var(--border); border-radius: 8px; max-height: 250px; overflow-y: auto;">
+          <table class="relatorio-table">
+            <tbody id="corpo-relatorio-saidas"></tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <h4 style="font-family:var(--mono); color:var(--green); font-size: 13px; margin-bottom: 8px;">⬆️ MAIS ADICIONADOS (ENTRADAS)</h4>
+        <div style="border: 1px solid var(--border); border-radius: 8px; max-height: 250px; overflow-y: auto;">
+          <table class="relatorio-table">
+            <tbody id="corpo-relatorio-entradas"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions" style="margin-top: 24px;">
+      <button class="btn-primary" onclick="document.getElementById('modal-relatorio').style.display='none'" style="width: 100%;">Fechar Relatório</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -549,7 +595,7 @@
   let movTipo    = null;
   let deleteId   = null;
   let filtro     = 'todos';
-  let termoBusca = ''; // Variável para a barra de pesquisa
+  let termoBusca = ''; 
 
   let sortCol = 'nome';
   let sortAsc = true;
@@ -779,6 +825,64 @@
     janelaPrint.document.close();
   }
 
+  // ── NOVO: Relatório de Consumo ──
+  function abrirModalRelatorio() {
+    document.getElementById('filtro-dias-relatorio').value = '15';
+    renderRelatorio(15);
+    document.getElementById('modal-relatorio').style.display = 'flex';
+  }
+
+  function fecharModalRelatorio(e) {
+    if (e.target === document.getElementById('modal-relatorio'))
+      document.getElementById('modal-relatorio').style.display = 'none';
+  }
+
+  function renderRelatorio(dias) {
+    const dataLimite = new Date();
+    dataLimite.setDate(dataLimite.getDate() - dias);
+
+    let entradas = {};
+    let saidas = {};
+
+    historico.forEach(h => {
+      const dataMov = new Date(h.criado_em);
+      if (dias === 0 || dataMov >= dataLimite) {
+        if (h.tipo === 'ENTRADA') {
+          entradas[h.item_nome] = (entradas[h.item_nome] || 0) + h.quantidade;
+        } else if (h.tipo === 'SAÍDA') {
+          saidas[h.item_nome] = (saidas[h.item_nome] || 0) + h.quantidade;
+        }
+      }
+    });
+
+    const arrEntradas = Object.keys(entradas).map(nome => ({ nome, total: entradas[nome] })).sort((a,b) => b.total - a.total);
+    const arrSaidas = Object.keys(saidas).map(nome => ({ nome, total: saidas[nome] })).sort((a,b) => b.total - a.total);
+
+    const tbodyEntradas = document.getElementById('corpo-relatorio-entradas');
+    if(arrEntradas.length === 0) {
+      tbodyEntradas.innerHTML = '<tr><td colspan="2" class="empty-state" style="padding:20px;">Sem entradas no período.</td></tr>';
+    } else {
+      tbodyEntradas.innerHTML = arrEntradas.map(i => `
+        <tr>
+          <td>${esc(i.nome)}</td>
+          <td style="text-align:right; color:var(--green); font-weight:bold; font-family:var(--mono);">+${i.total}</td>
+        </tr>
+      `).join('');
+    }
+
+    const tbodySaidas = document.getElementById('corpo-relatorio-saidas');
+    if(arrSaidas.length === 0) {
+      tbodySaidas.innerHTML = '<tr><td colspan="2" class="empty-state" style="padding:20px;">Sem saídas no período.</td></tr>';
+    } else {
+      tbodySaidas.innerHTML = arrSaidas.map(i => `
+        <tr>
+          <td>${esc(i.nome)}</td>
+          <td style="text-align:right; color:var(--red); font-weight:bold; font-family:var(--mono);">-${i.total}</td>
+        </tr>
+      `).join('');
+    }
+  }
+
   function authHeaders() {
     const token = localStorage.getItem('versah_token');
     return {
@@ -855,7 +959,6 @@
     render();
   }
 
-  // Função disparada pela barra de pesquisa
   function setBusca(termo) {
     termoBusca = termo;
     render();
@@ -881,14 +984,12 @@
 
     let filtrados = calculados;
     
-    // Filtro por botão (Todos, Reposição, Categoria)
     if (filtro === 'alerta') {
       filtrados = calculados.filter(i => i.precisaReposicao);
     } else if (filtro !== 'todos') {
       filtrados = calculados.filter(i => i.categoria === filtro);
     }
 
-    // Filtro pela barra de pesquisa
     if (termoBusca.trim() !== '') {
       const termoLower = termoBusca.toLowerCase().trim();
       filtrados = filtrados.filter(i => i.nome.toLowerCase().includes(termoLower));
