@@ -497,14 +497,11 @@
       </table>
     </div>
 
-    <label style="margin-bottom: 8px; display: block;">Exportar Lista para:</label>
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
-      <button class="btn-secondary" onclick="exportarComprasExcel()" style="font-size: 13px; padding: 12px 6px;">📊 Planilha Excel</button>
-      <button class="btn-secondary" onclick="exportarComprasPDF()" style="font-size: 13px; padding: 12px 6px;">📄 Documento PDF</button>
-      <button class="btn-secondary" onclick="exportarComprasTXT()" style="font-size: 13px; padding: 12px 6px;">📝 Bloco de Notas</button>
+    <div style="display: flex; justify-content: center; margin-top: 16px;">
+      <button class="btn-secondary" onclick="exportarComprasPDF()" style="padding: 12px 24px; font-size: 14px;">📄 Exportar Documento PDF</button>
     </div>
 
-    <div class="modal-actions" style="margin-top: 20px;">
+    <div class="modal-actions" style="margin-top: 24px;">
       <button class="btn-primary" onclick="document.getElementById('modal-compras').style.display='none'" style="width: 100%;">Fechar Janela</button>
     </div>
   </div>
@@ -666,7 +663,6 @@
     return listaCategoriasAtivas.includes(cat) ? cat : 'Sem categoria';
   }
 
-  // ── NOVO: Lógica da Lista de Compras Automatizada ──
   function abrirModalCompras() {
     const calculados = items.map(calcularItem);
     const paraRepor = calculados.filter(i => i.precisaReposicao);
@@ -691,51 +687,6 @@
   function fecharModalCompras(e) {
     if (e.target === document.getElementById('modal-compras'))
       document.getElementById('modal-compras').style.display = 'none';
-  }
-
-  function exportarComprasTXT() {
-    const calculados = items.map(calcularItem);
-    const paraRepor = calculados.filter(i => i.precisaReposicao);
-    if (paraRepor.length === 0) return showErro('Não há materiais em alerta para exportar.');
-
-    let txt = `VERSAH ESTOQUECONTROL - LISTA DE COMPRAS\\n`;
-    txt += `Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}\\n`;
-    txt += `==================================================\\n\\n`;
-    
-    paraRepor.forEach((i, idx) => {
-      txt += `${idx + 1}. MATERIAL: ${i.nome}\\n`;
-      txt += `   Categoria: ${i.categoria}\\n`;
-      txt += `   Estoque Atual: ${i.atual} / Mínimo: ${i.minimo} / Ideal: ${i.ideal}\\n`;
-      txt += `   QUANTIDADE A COMPRAR: ${i.quantidadeComprar} un.\\n`;
-      txt += `--------------------------------------------------\\n`;
-    });
-
-    const blob = new Blob([txt], { type: 'text/plain;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `lista_compras_versah_${new Date().toISOString().slice(0,10)}.txt`;
-    link.click();
-    showToast('✓ Bloco de Notas (TXT) baixado!');
-  }
-
-  function exportarComprasExcel() {
-    const calculados = items.map(calcularItem);
-    const paraRepor = calculados.filter(i => i.precisaReposicao);
-    if (paraRepor.length === 0) return showErro('Não há materiais em alerta para exportar.');
-
-    let csv = '\\uFEFF'; 
-    csv += 'Material;Categoria;Estoque Atual;Estoque Minimo;Estoque Ideal;Quantidade a Comprar\\n';
-    
-    paraRepor.forEach(i => {
-      csv += `"${i.nome.replace(/"/g, '""')}";"${i.categoria.replace(/"/g, '""')}";${i.atual};${i.minimo};${i.ideal};${i.quantidadeComprar}\\n`;
-    });
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `lista_compras_versah_${new Date().toISOString().slice(0,10)}.csv`;
-    link.click();
-    showToast('✓ Planilha Excel baixada!');
   }
 
   function exportarComprasPDF() {
@@ -1065,7 +1016,7 @@
       }
       fecharForm();
       render();
-      showToast(editandoId !== null ? '✓ Item updated.' : '✓ Item added.');
+      showToast(editandoId !== null ? '✓ Item atualizado.' : '✓ Item adicionado.');
     } catch {
       showErro('Não foi possível salvar. Verifique a conexão.');
     }
@@ -1128,7 +1079,7 @@
     try {
       const res = await fetch(`${API}/estoque/${movId}/mover`, {
         method: 'POST', headers: authHeaders(),
-        body: JSON.stringify({ tipo: movTipo, quantity: qtd, observacao: obs })
+        body: JSON.stringify({ tipo: movTipo, quantidade: qtd, observacao: obs })
       });
       const data = await res.json();
       if (!res.ok) return showErro(data.erro || 'Erro na movimentação.');
@@ -1178,5 +1129,3 @@
 </script>
 </body>
 </html>
-
-
