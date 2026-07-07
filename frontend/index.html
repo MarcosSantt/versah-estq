@@ -77,7 +77,7 @@
       transition: transform 0.2s, box-shadow 0.2s;
     }
     .kpi-card.alerta { border-color: #ef444444; box-shadow: 0 0 20px #ef444415; }
-    
+
     /* Novo estilo para o cartão de alerta clicável */
     #kpi-alerta { cursor: pointer; }
     #kpi-alerta:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(239, 68, 68, 0.2); }
@@ -126,6 +126,17 @@
       color: var(--primary); font-size: 16px; font-family: var(--sans);
       transition: border-color 0.15s, box-shadow 0.15s;
     }
+    /* Estilo do novo select de categoria, igual aos inputs existentes */
+    select#f-categoria {
+      width: 100%; padding: 12px 14px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 10px;
+      color: var(--primary); font-size: 16px; font-family: var(--sans);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    select#f-categoria:focus {
+      outline: none; border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(195, 163, 101, 0.2);
+    }
     input::placeholder { color: var(--muted); }
     input:focus {
       outline: none; border-color: var(--accent);
@@ -148,6 +159,8 @@
     }
     .filtro-btn.ativo-todos  { background: var(--primary); color: #fff; border-color: var(--primary); }
     .filtro-btn.ativo-alerta { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+    /* Botões de filtro por categoria (gerados dinamicamente) */
+    .filtro-btn.ativo-categoria { background: #eef2f7; color: #1e3a5f; border-color: #b7c6dc; }
 
     #tabela-wrap {
       background: var(--surface); border: 1px solid var(--border);
@@ -165,7 +178,7 @@
     }
     .tabela-title { font-family: var(--mono); font-size: 14px; color: var(--dim); letter-spacing: 0.05em; }
     table { width: 100%; border-collapse: collapse; }
-    
+
     /* Alteração no th para ordenação */
     thead th {
       padding: 14px 16px; text-align: left;
@@ -211,6 +224,8 @@
     }
     .badge.ok   { background: #dcfce7; color: #15803d; }
     .badge.repor { background: #fee2e2; color: #b91c1c; }
+    /* Badge de categoria na tabela */
+    .badge.categoria-badge { background: #eef2f7; color: #1e3a5f; }
 
     .action-wrap { display: flex; gap: 6px; }
     .action-btn {
@@ -380,6 +395,18 @@
         <label>Estoque ideal</label>
         <input type="number" id="f-ideal" min="0" placeholder="0" oninput="atualizarPreview()" />
       </div>
+      <div>
+        <!-- NOVO: campo de categoria/tag do material -->
+        <label>Categoria</label>
+        <select id="f-categoria">
+          <option value="Sem categoria">Sem categoria</option>
+          <option value="Insumos">Insumos</option>
+          <option value="Limpeza">Limpeza</option>
+          <option value="Escritório">Escritório</option>
+          <option value="Materiais para Cirurgia">Materiais para Cirurgia</option>
+          <option value="Outros">Outros</option>
+        </select>
+      </div>
       <div class="calc-preview">
         Comprar: <strong id="preview-comprar">0</strong> unidades
       </div>
@@ -398,6 +425,8 @@
           <span>Filtrar:</span>
           <button id="btn-filtro-todos"  class="filtro-btn ativo-todos" onclick="setFiltro('todos')">Todos</button>
           <button id="btn-filtro-alerta" class="filtro-btn" onclick="setFiltro('alerta')">⚠ Reposição</button>
+          <!-- NOVO: botões de filtro por categoria, gerados dinamicamente em render() -->
+          <span id="filtros-categorias" style="display:contents"></span>
         </div>
       </div>
       <button class="btn-primary" onclick="abrirFormNovo()">+ Novo item</button>
@@ -412,11 +441,12 @@
             <th class="th-sortable" onclick="ordenarPor('ideal')">Ideal <span id="sort-ideal" class="sort-icon"></span></th>
             <th class="th-sortable" onclick="ordenarPor('comprar')">A comprar <span id="sort-comprar" class="sort-icon"></span></th>
             <th class="th-sortable" onclick="ordenarPor('status')">Status <span id="sort-status" class="sort-icon"></span></th>
+            <th class="th-sortable" onclick="ordenarPor('categoria')">Categoria <span id="sort-categoria" class="sort-icon"></span></th>
             <th>Ações</th>
           </tr>
         </thead>
         <tbody id="tabela-body">
-          <tr><td colspan="7" class="empty-state">Nenhum item cadastrado ainda.</td></tr>
+          <tr><td colspan="8" class="empty-state">Nenhum item cadastrado ainda.</td></tr>
         </tbody>
       </table>
     </div>
@@ -473,10 +503,36 @@
   let movTipo    = null;
   let deleteId   = null;
   let filtro     = 'todos';
-  
+
   // ── Variáveis para controle de ordenação ──
   let sortCol = 'nome';
   let sortAsc = true;
+
+  // ── NOVO: categorias são guardadas no localStorage (chave -> {id: categoria}) ──
+  // Isso evita mexer nas chamadas à API existentes (o backend pode não ter esse campo).
+  const CATEGORIAS_KEY = 'versah_categorias';
+
+  function getCategoriasMap() {
+    try {
+      return JSON.parse(localStorage.getItem(CATEGORIAS_KEY) || '{}');
+    } catch {
+      return {};
+    }
+  }
+  function setCategoriaItem(id, categoria) {
+    const map = getCategoriasMap();
+    map[id] = categoria;
+    localStorage.setItem(CATEGORIAS_KEY, JSON.stringify(map));
+  }
+  function removerCategoriaItem(id) {
+    const map = getCategoriasMap();
+    delete map[id];
+    localStorage.setItem(CATEGORIAS_KEY, JSON.stringify(map));
+  }
+  function obterCategoriaItem(id) {
+    const map = getCategoriasMap();
+    return map[id] || 'Sem categoria';
+  }
 
   function authHeaders() {
     const token = localStorage.getItem('versah_token');
@@ -559,7 +615,9 @@
     const percentual        = item.ideal > 0
       ? Math.min(100, Math.round((item.atual / item.ideal) * 100))
       : 0;
-    return { ...item, quantidadeComprar, precisaReposicao, percentual };
+    // NOVO: categoria vem do localStorage, não do backend
+    const categoria = obterCategoriaItem(item.id);
+    return { ...item, quantidadeComprar, precisaReposicao, percentual, categoria };
   }
 
   function ordenarPor(col) {
@@ -583,25 +641,38 @@
     document.getElementById('kpi-alerta').classList.toggle('alerta', totalAlerta > 0);
     document.getElementById('btn-filtro-alerta').textContent = `⚠ Reposição (${totalAlerta})`;
 
-    let filtrados = filtro === 'alerta'
-      ? calculados.filter(i => i.precisaReposicao)
-      : calculados;
+    // NOVO: monta os botões de filtro por categoria dinamicamente
+    const categoriasPresentes = [...new Set(calculados.map(i => i.categoria))].sort((a, b) => a.localeCompare(b));
+    const wrapCategorias = document.getElementById('filtros-categorias');
+    wrapCategorias.innerHTML = categoriasPresentes.map(cat => {
+      const ativo = filtro === cat ? ' ativo-categoria' : '';
+      return `<button class="filtro-btn${ativo}" onclick="setFiltro('${esc(cat).replace(/'/g, "\\'")}')">${esc(cat)}</button>`;
+    }).join('');
+
+    let filtrados = calculados;
+    if (filtro === 'alerta') {
+      filtrados = calculados.filter(i => i.precisaReposicao);
+    } else if (filtro !== 'todos') {
+      filtrados = calculados.filter(i => i.categoria === filtro);
+    }
 
     // Lógica de Ordenação
     filtrados.sort((a, b) => {
       let valA, valB;
-      if (sortCol === 'nome') { 
-        valA = a.nome.toLowerCase(); valB = b.nome.toLowerCase(); 
-      } else if (sortCol === 'minimo') { 
-        valA = a.minimo; valB = b.minimo; 
-      } else if (sortCol === 'atual') { 
-        valA = a.atual; valB = b.atual; 
-      } else if (sortCol === 'ideal') { 
-        valA = a.ideal; valB = b.ideal; 
-      } else if (sortCol === 'comprar') { 
-        valA = a.quantidadeComprar; valB = b.quantidadeComprar; 
-      } else if (sortCol === 'status') { 
-        valA = a.precisaReposicao ? 1 : 0; valB = b.precisaReposicao ? 1 : 0; 
+      if (sortCol === 'nome') {
+        valA = a.nome.toLowerCase(); valB = b.nome.toLowerCase();
+      } else if (sortCol === 'minimo') {
+        valA = a.minimo; valB = b.minimo;
+      } else if (sortCol === 'atual') {
+        valA = a.atual; valB = b.atual;
+      } else if (sortCol === 'ideal') {
+        valA = a.ideal; valB = b.ideal;
+      } else if (sortCol === 'comprar') {
+        valA = a.quantidadeComprar; valB = b.quantidadeComprar;
+      } else if (sortCol === 'status') {
+        valA = a.precisaReposicao ? 1 : 0; valB = b.precisaReposicao ? 1 : 0;
+      } else if (sortCol === 'categoria') {
+        valA = a.categoria.toLowerCase(); valB = b.categoria.toLowerCase();
       }
 
       if (valA < valB) return sortAsc ? -1 : 1;
@@ -610,7 +681,7 @@
     });
 
     // Atualiza os ícones no cabeçalho
-    ['nome', 'minimo', 'atual', 'ideal', 'comprar', 'status'].forEach(col => {
+    ['nome', 'minimo', 'atual', 'ideal', 'comprar', 'status', 'categoria'].forEach(col => {
       const el = document.getElementById(`sort-${col}`);
       if (el) el.textContent = '';
     });
@@ -619,7 +690,7 @@
 
     const tbody = document.getElementById('tabela-body');
     if (filtrados.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Nenhum item encontrado.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" class="empty-state">Nenhum item encontrado.</td></tr>`;
       return;
     }
 
@@ -645,6 +716,9 @@
             <span class="badge ${item.precisaReposicao ? 'repor' : 'ok'}">
               ${item.precisaReposicao ? '⚠ Repor' : '✓ OK'}
             </span>
+          </td>
+          <td>
+            <span class="badge categoria-badge">${esc(item.categoria)}</span>
           </td>
           <td>
             <div class="action-wrap">
@@ -688,6 +762,7 @@
     editandoId = null;
     document.getElementById('form-title').textContent = '+ Novo Material';
     ['f-nome','f-minimo','f-atual','f-ideal'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f-categoria').value = 'Sem categoria';
     document.getElementById('preview-comprar').textContent = '0';
     document.getElementById('form-panel').classList.add('visible');
     setTimeout(() => document.getElementById('f-nome').focus(), 100);
@@ -702,6 +777,7 @@
     document.getElementById('f-minimo').value = item.minimo;
     document.getElementById('f-atual').value  = item.atual;
     document.getElementById('f-ideal').value  = item.ideal;
+    document.getElementById('f-categoria').value = obterCategoriaItem(id);
     atualizarPreview();
     document.getElementById('form-panel').classList.add('visible');
     setTimeout(() => {
@@ -726,6 +802,7 @@
     const minimo = parseInt(document.getElementById('f-minimo').value, 10);
     const atual  = parseInt(document.getElementById('f-atual').value, 10);
     const ideal  = parseInt(document.getElementById('f-ideal').value, 10);
+    const categoria = document.getElementById('f-categoria').value || 'Sem categoria';
 
     if (!nome) return showErro('Informe o nome do material.');
     if ([minimo, atual, ideal].some(v => isNaN(v) || v < 0)) return showErro('Preencha todos os campos com valores válidos (≥ 0).');
@@ -749,8 +826,10 @@
 
       if (editandoId !== null) {
         items = items.map(i => i.id === editandoId ? data : i);
+        setCategoriaItem(editandoId, categoria);
       } else {
         items.push(data);
+        setCategoriaItem(data.id, categoria);
       }
       fecharForm();
       render();
@@ -777,6 +856,7 @@
       if (!res.ok) { const d = await res.json(); return showErro(d.erro || 'Erro ao remover.'); }
       items = items.filter(i => i.id !== deleteId);
       historico = historico.filter(h => h.item_id !== deleteId);
+      removerCategoriaItem(deleteId);
       deleteId = null;
       document.getElementById('modal-delete').style.display = 'none';
       render();
