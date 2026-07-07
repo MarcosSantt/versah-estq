@@ -138,7 +138,7 @@
     .calc-preview strong { color: var(--accent); font-size: 16px; margin: 0 4px; }
     .form-actions { display: flex; gap: 12px; margin-top: 24px; }
 
-    #filtros { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+    #filtros { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 0; }
     #filtros span { color: var(--subtle); font-size: 13px; margin-right: 4px; }
     .filtro-btn {
       padding: 6px 14px; border-radius: 99px; font-size: 12px; font-weight: 600;
@@ -158,11 +158,33 @@
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
     }
+    
+    /* Novo layout do Cabeçalho da Tabela com Barra de Pesquisa */
     .tabela-header {
       padding: 20px 28px 16px;
-      display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 12px;
+      border-bottom: 1px solid var(--border);
     }
+    .tabela-header-top {
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+      margin-bottom: 16px;
+    }
+    .tabela-header-bottom {
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
+    }
+    .search-wrap { 
+      flex: 1; display: flex; justify-content: flex-end; min-width: 200px; 
+    }
+    .search-input {
+      width: 100%; max-width: 300px; padding: 10px 16px; border-radius: 99px;
+      border: 1px solid var(--border); background: var(--bg);
+      font-family: var(--sans); font-size: 13px; color: var(--primary);
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(195, 163, 101, 0.2);
+    }
+
     .tabela-title { font-family: var(--mono); font-size: 14px; color: var(--dim); letter-spacing: 0.05em; }
     table { width: 100%; border-collapse: collapse; }
 
@@ -286,7 +308,10 @@
       #kpi-grid { grid-template-columns: 1fr; }
       #header { padding: 16px 20px; }
       #app { padding: 20px 16px 0; }
-      .tabela-header { flex-direction: column; align-items: flex-start; }
+      .tabela-header-top { flex-direction: column; align-items: flex-start; }
+      .tabela-header-bottom { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .search-wrap { justify-content: flex-start; width: 100%; }
+      .search-input { max-width: 100%; width: 100%; }
       .form-grid { grid-template-columns: 1fr; }
       .form-grid .full { grid-column: 1; }
       table { font-size: 13px; min-width: 640px; }
@@ -386,18 +411,23 @@
 
   <div id="tabela-wrap">
     <div class="tabela-header">
-      <div>
+      <div class="tabela-header-top">
         <div class="tabela-title">MATERIAIS E INSUMOS</div>
-        <div id="filtros" style="margin-top:10px">
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <button class="btn-secondary" onclick="abrirModalCompras()">📋 Lista de Compras</button>
+          <button class="btn-primary" onclick="abrirFormNovo()">+ Novo item</button>
+        </div>
+      </div>
+      <div class="tabela-header-bottom">
+        <div id="filtros">
           <span>Filtrar:</span>
           <button id="btn-filtro-todos"  class="filtro-btn ativo-todos" onclick="setFiltro('todos')">Todos</button>
           <button id="btn-filtro-alerta" class="filtro-btn" onclick="setFiltro('alerta')">⚠ Reposição</button>
           <span id="filtros-categorias" style="display:contents"></span>
         </div>
-      </div>
-      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-        <button class="btn-secondary" onclick="abrirModalCompras()">📋 Lista de Compras</button>
-        <button class="btn-primary" onclick="abrirFormNovo()">+ Novo item</button>
+        <div class="search-wrap">
+          <input type="text" id="busca-material" class="search-input" placeholder="🔍 Buscar material..." oninput="setBusca(this.value)" />
+        </div>
       </div>
     </div>
     <div class="tabela-scroll">
@@ -519,6 +549,7 @@
   let movTipo    = null;
   let deleteId   = null;
   let filtro     = 'todos';
+  let termoBusca = ''; // Variável para a barra de pesquisa
 
   let sortCol = 'nome';
   let sortAsc = true;
@@ -824,6 +855,12 @@
     render();
   }
 
+  // Função disparada pela barra de pesquisa
+  function setBusca(termo) {
+    termoBusca = termo;
+    render();
+  }
+
   function render() {
     const calculados   = items.map(calcularItem);
     const totalAlerta  = calculados.filter(i => i.precisaReposicao).length;
@@ -843,10 +880,18 @@
     }).join('');
 
     let filtrados = calculados;
+    
+    // Filtro por botão (Todos, Reposição, Categoria)
     if (filtro === 'alerta') {
       filtrados = calculados.filter(i => i.precisaReposicao);
     } else if (filtro !== 'todos') {
       filtrados = calculados.filter(i => i.categoria === filtro);
+    }
+
+    // Filtro pela barra de pesquisa
+    if (termoBusca.trim() !== '') {
+      const termoLower = termoBusca.toLowerCase().trim();
+      filtrados = filtrados.filter(i => i.nome.toLowerCase().includes(termoLower));
     }
 
     filtrados.sort((a, b) => {
