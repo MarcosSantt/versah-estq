@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+html_content = """<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -249,7 +249,6 @@
     .modal-info  { font-size: 14px; color: var(--secondary); margin-bottom: 20px; }
     .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
 
-    /* Estilos Modal Categorias */
     .cat-list { margin-top: 16px; max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; }
     .cat-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--bg); font-size: 14px; }
     .cat-item:last-child { border-bottom: none; }
@@ -396,19 +395,22 @@
           <span id="filtros-categorias" style="display:contents"></span>
         </div>
       </div>
-      <button class="btn-primary" onclick="abrirFormNovo()">+ Novo item</button>
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <button class="btn-secondary" onclick="abrirModalCompras()">📋 Lista de Compras</button>
+        <button class="btn-primary" onclick="abrirFormNovo()">+ Novo item</button>
+      </div>
     </div>
     <div class="tabela-scroll">
       <table>
         <thead>
           <tr>
-            <th class="th-sortable" onclick="ordenarPor('nome')">Material <span id="sort-nome" class="sort-icon"></span></th>
-            <th class="th-sortable" onclick="ordenarPor('minimo')">Mínimo <span id="sort-minimo" class="sort-icon"></span></th>
-            <th class="th-sortable" onclick="ordenarPor('atual')">Atual <span id="sort-atual" class="sort-icon"></span></th>
-            <th class="th-sortable" onclick="ordenarPor('ideal')">Ideal <span id="sort-ideal" class="sort-icon"></span></th>
-            <th class="th-sortable" onclick="ordenarPor('comprar')">A comprar <span id="sort-comprar" class="sort-icon"></span></th>
-            <th class="th-sortable" onclick="ordenarPor('status')">Status <span id="sort-status" class="sort-icon"></span></th>
-            <th class="th-sortable" onclick="ordenarPor('categoria')">Categoria <span id="sort-categoria" class="sort-icon"></span></th>
+            <th class="th-sortable" onclick="organizarPor('nome')">Material <span id="sort-nome" class="sort-icon"></span></th>
+            <th class="th-sortable" onclick="organizarPor('minimo')">Mínimo <span id="sort-minimo" class="sort-icon"></span></th>
+            <th class="th-sortable" onclick="organizarPor('atual')">Atual <span id="sort-atual" class="sort-icon"></span></th>
+            <th class="th-sortable" onclick="organizarPor('ideal')">Ideal <span id="sort-ideal" class="sort-icon"></span></th>
+            <th class="th-sortable" onclick="organizarPor('comprar')">A comprar <span id="sort-comprar" class="sort-icon"></span></th>
+            <th class="th-sortable" onclick="organizarPor('status')">Status <span id="sort-status" class="sort-icon"></span></th>
+            <th class="th-sortable" onclick="organizarPor('categoria')">Categoria <span id="sort-categoria" class="sort-icon"></span></th>
             <th>Ações</th>
           </tr>
         </thead>
@@ -467,11 +469,43 @@
       <button class="btn-primary" onclick="adicionarCategoria()">Adicionar</button>
     </div>
 
-    <div class="cat-list" id="lista-categorias-modal">
-      </div>
+    <div class="cat-list" id="lista-categorias-modal"></div>
 
     <div class="modal-actions">
       <button class="btn-secondary" onclick="document.getElementById('modal-categorias').style.display='none'" style="width: 100%;">Concluído</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-compras" onclick="fecharModalCompras(event)">
+  <div class="modal-box" style="max-width: 650px; width: 100%;">
+    <div class="modal-title">📋 Lista de Compras Automatizada</div>
+    <p class="modal-info">Estes são os materiais que precisam de reposição imediata (abaixo do estoque mínimo).</p>
+    
+    <div style="max-height: 280px; overflow-y: auto; margin: 16px 0; border: 1px solid var(--border); border-radius: 10px;">
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="background: var(--bg); font-family: var(--mono); font-size: 11px; text-transform: uppercase;">
+            <th style="padding: 10px 14px; text-align: left;">Material</th>
+            <th style="padding: 10px 14px; text-align: left;">Categoria</th>
+            <th style="padding: 10px 14px; text-align: center;">Atual</th>
+            <th style="padding: 10px 14px; text-align: center;">Ideal</th>
+            <th style="padding: 10px 14px; text-align: center; color: var(--accent);">Falta</th>
+          </tr>
+        </thead>
+        <tbody id="corpo-compras-modal"></tbody>
+      </table>
+    </div>
+
+    <label style="margin-bottom: 8px; display: block;">Exportar Lista para:</label>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+      <button class="btn-secondary" onclick="exportarComprasExcel()" style="font-size: 13px; padding: 12px 6px;">📊 Planilha Excel</button>
+      <button class="btn-secondary" onclick="exportarComprasPDF()" style="font-size: 13px; padding: 12px 6px;">📄 Documento PDF</button>
+      <button class="btn-secondary" onclick="exportarComprasTXT()" style="font-size: 13px; padding: 12px 6px;">📝 Bloco de Notas</button>
+    </div>
+
+    <div class="modal-actions" style="margin-top: 20px;">
+      <button class="btn-primary" onclick="document.getElementById('modal-compras').style.display='none'" style="width: 100%;">Fechar Janela</button>
     </div>
   </div>
 </div>
@@ -492,17 +526,14 @@
   let sortCol = 'nome';
   let sortAsc = true;
 
-  // ── Gestão de Categorias no LocalStorage ──
-  const CATEGORIAS_KEY = 'versah_categorias';       // Mapeamento: { id_do_item: 'Nome da Categoria' }
-  const LISTA_CAT_KEY  = 'versah_lista_categorias'; // Array: ['Insumos', 'Limpeza', ...]
+  const CATEGORIAS_KEY = 'versah_categorias';       
+  const LISTA_CAT_KEY  = 'versah_lista_categorias'; 
   
   let listaCategoriasAtivas = [];
 
-  // Inicializa e carrega a lista mestre de categorias
   function carregarListaCategorias() {
     const salvas = localStorage.getItem(LISTA_CAT_KEY);
     if (!salvas) {
-      // Categorias padrão se for o primeiro acesso
       listaCategoriasAtivas = ['Sem categoria', 'Insumos', 'Limpeza', 'Escritório', 'Materiais para Cirurgia', 'Outros'];
       salvarListaCategorias();
     } else {
@@ -514,15 +545,14 @@
   function salvarListaCategorias() {
     localStorage.setItem(LISTA_CAT_KEY, JSON.stringify(listaCategoriasAtivas));
     atualizarSelectFormulario();
-    renderCategoriasModal(); // Atualiza modal se estiver aberto
-    render(); // Atualiza tabela e filtros
+    renderCategoriasModal();
+    render();
   }
 
   function atualizarSelectFormulario() {
     const select = document.getElementById('f-categoria');
     const valorAtual = select.value;
     select.innerHTML = listaCategoriasAtivas.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
-    // Tenta manter a seleção anterior, se ainda existir
     if (listaCategoriasAtivas.includes(valorAtual)) {
       select.value = valorAtual;
     } else if (listaCategoriasAtivas.length > 0) {
@@ -530,7 +560,6 @@
     }
   }
 
-  // Funções de CRUD das Categorias
   function adicionarCategoria() {
     const input = document.getElementById('nova-cat-nome');
     const nome = input.value.trim();
@@ -546,20 +575,15 @@
 
   function editarCategoria(nomeAntigo) {
     if (nomeAntigo === 'Sem categoria') return showErro('Não é possível editar a categoria padrão.');
-    
     const novoNome = prompt(`Renomear categoria "${nomeAntigo}" para:`, nomeAntigo);
     if (!novoNome || novoNome.trim() === '' || novoNome === nomeAntigo) return;
-    
     const nomeFinal = novoNome.trim();
     if (listaCategoriasAtivas.some(c => c.toLowerCase() === nomeFinal.toLowerCase())) {
       return showErro('Já existe uma categoria com este nome.');
     }
-
-    // 1. Atualiza na lista mestre
     const index = listaCategoriasAtivas.indexOf(nomeAntigo);
     if (index !== -1) listaCategoriasAtivas[index] = nomeFinal;
 
-    // 2. Atualiza os itens que usavam essa categoria
     const map = getCategoriasMap();
     let mudouAlgum = false;
     for (let id in map) {
@@ -569,23 +593,16 @@
       }
     }
     if (mudouAlgum) localStorage.setItem(CATEGORIAS_KEY, JSON.stringify(map));
-
-    // Se o filtro ativo for a categoria antiga, atualiza o filtro
     if (filtro === nomeAntigo) filtro = nomeFinal;
-
     salvarListaCategorias();
-    showToast('Categoria renomeada com sucesso.');
+    showToast('Categoria renomeada.');
   }
 
   function excluirCategoria(nomeCat) {
     if (nomeCat === 'Sem categoria') return showErro('Não é possível excluir a categoria padrão.');
-    
-    if (!confirm(`Tem certeza que deseja excluir "${nomeCat}"?\n\nOs itens que estão nessa categoria voltarão para "Sem categoria".`)) return;
-
-    // 1. Remove da lista mestre
+    if (!confirm(`Tem certeza que deseja excluir "${nomeCat}"?\n\nOs itens voltarão para "Sem categoria".`)) return;
     listaCategoriasAtivas = listaCategoriasAtivas.filter(c => c !== nomeCat);
 
-    // 2. Transfere os itens para "Sem categoria"
     const map = getCategoriasMap();
     let mudouAlgum = false;
     for (let id in map) {
@@ -595,15 +612,11 @@
       }
     }
     if (mudouAlgum) localStorage.setItem(CATEGORIAS_KEY, JSON.stringify(map));
-
-    // Se o filtro ativo for a excluída, reseta o filtro
     if (filtro === nomeCat) filtro = 'todos';
-
     salvarListaCategorias();
     showToast('Categoria excluída.');
   }
 
-  // Modais da Categoria
   function abrirModalCategorias() {
     document.getElementById('modal-categorias').style.display = 'flex';
     document.getElementById('nova-cat-nome').focus();
@@ -624,8 +637,8 @@
           <span>${esc(cat)}</span>
           ${isPadrao ? '<span style="color:var(--muted);font-size:12px;">(Padrão)</span>' : `
           <div class="cat-item-actions">
-            <button class="action-btn edit" title="Editar Nome" onclick="editarCategoria('${esc(cat).replace(/'/g, "\\'")}')">✏</button>
-            <button class="action-btn del" title="Excluir" onclick="excluirCategoria('${esc(cat).replace(/'/g, "\\'")}')">✕</button>
+            <button class="action-btn edit" title="Editar Nome" onclick="editarCategoria('${esc(cat).replace(/'/g, "\\\\'")}')">✏</button>
+            <button class="action-btn del" title="Excluir" onclick="excluirCategoria('${esc(cat).replace(/'/g, "\\\\'")}')">✕</button>
           </div>
           `}
         </div>
@@ -633,7 +646,6 @@
     }).join('');
   }
 
-  // ── Funções Auxiliares de Mapeamento (Item -> Categoria) ──
   function getCategoriasMap() {
     try { return JSON.parse(localStorage.getItem(CATEGORIAS_KEY) || '{}'); } 
     catch { return {}; }
@@ -651,10 +663,139 @@
   function obterCategoriaItem(id) {
     const map = getCategoriasMap();
     const cat = map[id] || 'Sem categoria';
-    // Garantia extra: se a categoria do item foi apagada por fora, volta pro padrão
     return listaCategoriasAtivas.includes(cat) ? cat : 'Sem categoria';
   }
 
+  // ── NOVO: Lógica da Lista de Compras Automatizada ──
+  function abrirModalCompras() {
+    const calculados = items.map(calcularItem);
+    const paraRepor = calculados.filter(i => i.precisaReposicao);
+    
+    const tbody = document.getElementById('corpo-compras-modal');
+    if (paraRepor.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="padding: 32px;">🎉 Excelente! Nenhum item atingiu o estoque mínimo. Tudo abastecido!</td></tr>`;
+    } else {
+      tbody.innerHTML = paraRepor.map(i => `
+        <tr style="border-bottom: 1px solid var(--bg);">
+          <td style="padding: 12px 14px; font-weight: 600;">${esc(i.nome)}</td>
+          <td style="padding: 12px 14px;"><span class="badge categoria-badge">${esc(i.categoria)}</span></td>
+          <td style="padding: 12px 14px; text-align: center; font-family: var(--mono);">${i.atual}</td>
+          <td style="padding: 12px 14px; text-align: center; font-family: var(--mono);">${i.ideal}</td>
+          <td style="padding: 12px 14px; text-align: center; font-family: var(--mono); font-weight: 700; color: var(--accent);">${i.quantidadeComprar}</td>
+        </tr>
+      `).join('');
+    }
+    document.getElementById('modal-compras').style.display = 'flex';
+  }
+
+  function fecharModalCompras(e) {
+    if (e.target === document.getElementById('modal-compras'))
+      document.getElementById('modal-compras').style.display = 'none';
+  }
+
+  function exportarComprasTXT() {
+    const calculados = items.map(calcularItem);
+    const paraRepor = calculados.filter(i => i.precisaReposicao);
+    if (paraRepor.length === 0) return showErro('Não há materiais em alerta para exportar.');
+
+    let txt = `VERSAH ESTOQUECONTROL - LISTA DE COMPRAS\\n`;
+    txt += `Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}\\n`;
+    txt += `==================================================\\n\\n`;
+    
+    paraRepor.forEach((i, idx) => {
+      txt += `${idx + 1}. MATERIAL: ${i.nome}\\n`;
+      txt += `   Categoria: ${i.categoria}\\n`;
+      txt += `   Estoque Atual: ${i.atual} / Mínimo: ${i.minimo} / Ideal: ${i.ideal}\\n`;
+      txt += `   QUANTIDADE A COMPRAR: ${i.quantidadeComprar} un.\\n`;
+      txt += `--------------------------------------------------\\n`;
+    });
+
+    const blob = new Blob([txt], { type: 'text/plain;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `lista_compras_versah_${new Date().toISOString().slice(0,10)}.txt`;
+    link.click();
+    showToast('✓ Bloco de Notas (TXT) baixado!');
+  }
+
+  function exportarComprasExcel() {
+    const calculados = items.map(calcularItem);
+    const paraRepor = calculados.filter(i => i.precisaReposicao);
+    if (paraRepor.length === 0) return showErro('Não há materiais em alerta para exportar.');
+
+    let csv = '\\uFEFF'; 
+    csv += 'Material;Categoria;Estoque Atual;Estoque Minimo;Estoque Ideal;Quantidade a Comprar\\n';
+    
+    paraRepor.forEach(i => {
+      csv += `"${i.nome.replace(/"/g, '""')}";"${i.categoria.replace(/"/g, '""')}";${i.atual};${i.minimo};${i.ideal};${i.quantidadeComprar}\\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `lista_compras_versah_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+    showToast('✓ Planilha Excel baixada!');
+  }
+
+  function exportarComprasPDF() {
+    const calculados = items.map(calcularItem);
+    const paraRepor = calculados.filter(i => i.precisaReposicao);
+    if (paraRepor.length === 0) return showErro('Não há materiais para gerar o PDF.');
+
+    const janelaPrint = window.open('', '_blank');
+    let html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Lista de Compras - Versah EstoqueControl</title>
+        <style>
+          body { font-family: Arial, sans-serif; color: #2C2A26; padding: 40px; background: #fff; }
+          .marca { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #858175; }
+          h1 { font-size: 22px; color: #1A1815; margin-top: 5px; border-bottom: 2px solid #C3A365; padding-bottom: 10px; }
+          p { font-size: 13px; color: #6A6658; margin-bottom: 30px; }
+          table { width: 100%; border-collapse: collapse; }
+          th { background: #F4F3EF; padding: 12px; text-align: left; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #E2DDD3; color: #6A6658; }
+          td { padding: 12px; border-bottom: 1px solid #E2DDD3; font-size: 13px; }
+          .destaque { font-weight: bold; color: #1A1815; }
+          .qtd { font-weight: bold; font-size: 15px; color: #C3A365; }
+        </style>
+      </head>
+      <body>
+        <div class="marca">Versah · EstoqueControl</div>
+        <h1>📋 Lista de Compras Automatizada</h1>
+        <p>Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Material</th>
+              <th>Categoria</th>
+              <th style="text-align: center;">Qtd. Atual</th>
+              <th style="text-align: center;">Qtd. Ideal</th>
+              <th style="text-align: center;">A Comprar</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${paraRepor.map(i => `
+              <tr>
+                <td class="destaque">${i.nome}</td>
+                <td>${i.categoria}</td>
+                <td style="text-align: center;">${i.atual}</td>
+                <td style="text-align: center;">${i.ideal}</td>
+                <td style="text-align: center;" class="qtd">${i.quantidadeComprar} un.</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <script>
+          window.onload = function() { window.print(); window.close(); }
+        <\/script>
+      </body>
+      </html>
+    `;
+    janelaPrint.document.write(html);
+    janelaPrint.document.close();
+  }
 
   function authHeaders() {
     const token = localStorage.getItem('versah_token');
@@ -675,7 +816,7 @@
 
     document.getElementById('header-sub').textContent = `Logado como: ${usuario.nome} (${usuario.email})`;
 
-    carregarListaCategorias(); // Carrega antes de buscar o estoque!
+    carregarListaCategorias();
 
     let seg = 0;
     const loadTimer = setInterval(() => {
@@ -726,7 +867,7 @@
     return { ...item, quantidadeComprar, precisaReposicao, percentual, categoria };
   }
 
-  function ordenarPor(col) {
+  function organizarPor(col) {
     if (sortCol === col) sortAsc = !sortAsc;
     else { sortCol = col; sortAsc = true; }
     render();
@@ -747,7 +888,7 @@
     const wrapCategorias = document.getElementById('filtros-categorias');
     wrapCategorias.innerHTML = categoriasPresentes.map(cat => {
       const ativo = filtro === cat ? ' ativo-categoria' : '';
-      return `<button class="filtro-btn${ativo}" onclick="setFiltro('${esc(cat).replace(/'/g, "\\'")}')">${esc(cat)}</button>`;
+      return `<button class="filtro-btn${ativo}" onclick="setFiltro('${esc(cat).replace(/'/g, "\\\\'")}')">${esc(cat)}</button>`;
     }).join('');
 
     let filtrados = calculados;
@@ -852,11 +993,8 @@
     editandoId = null;
     document.getElementById('form-title').textContent = '+ Novo Material';
     ['f-nome','f-minimo','f-atual','f-ideal'].forEach(id => document.getElementById(id).value = '');
-    
-    // Seleciona o primeiro ou "Sem categoria"
     const catSelect = document.getElementById('f-categoria');
     catSelect.value = listaCategoriasAtivas.includes('Sem categoria') ? 'Sem categoria' : listaCategoriasAtivas[0];
-    
     document.getElementById('preview-comprar').textContent = '0';
     document.getElementById('form-panel').classList.add('visible');
     setTimeout(() => document.getElementById('f-nome').focus(), 100);
@@ -927,7 +1065,7 @@
       }
       fecharForm();
       render();
-      showToast(editandoId !== null ? '✓ Item atualizado.' : '✓ Item adicionado.');
+      showToast(editandoId !== null ? '✓ Item updated.' : '✓ Item added.');
     } catch {
       showErro('Não foi possível salvar. Verifique a conexão.');
     }
@@ -990,7 +1128,7 @@
     try {
       const res = await fetch(`${API}/estoque/${movId}/mover`, {
         method: 'POST', headers: authHeaders(),
-        body: JSON.stringify({ tipo: movTipo, quantidade: qtd, observacao: obs })
+        body: JSON.stringify({ tipo: movTipo, quantity: qtd, observacao: obs })
       });
       const data = await res.json();
       if (!res.ok) return showErro(data.erro || 'Erro na movimentação.');
@@ -1039,4 +1177,9 @@
   inicializar();
 </script>
 </body>
-</html>
+</html>"""
+
+with open("estoque_control_atualizado.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+print("FILE_GENERATED_SUCCESSFULLY")
