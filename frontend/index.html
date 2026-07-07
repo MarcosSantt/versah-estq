@@ -275,11 +275,6 @@
     .cat-item:last-child { border-bottom: none; }
     .cat-item-actions { display: flex; gap: 6px; }
 
-    /* Estilos Tabela Modal Relatório */
-    .relatorio-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .relatorio-table td { padding: 10px 14px; border-bottom: 1px solid var(--bg); }
-    .relatorio-table tr:last-child td { border-bottom: none; }
-
     #loading-overlay {
       position: fixed; inset: 0; background: var(--bg);
       display: flex; align-items: center; justify-content: center;
@@ -322,7 +317,6 @@
       thead th, tbody td { padding: 10px 12px; }
       .action-wrap { flex-wrap: wrap; }
       .modal-box { padding: 24px 20px; }
-      .grid-relatorio { grid-template-columns: 1fr !important; }
     }
     @media (min-width: 701px) and (max-width: 1024px) {
       #kpi-grid { grid-template-columns: repeat(2, 1fr); }
@@ -543,11 +537,11 @@
   </div>
 </div>
 
-<!-- NOVO: Modal Relatório de Consumo -->
+<!-- NOVO: Modal Relatório Detalhado de Consumo -->
 <div class="modal-overlay" id="modal-relatorio" onclick="fecharModalRelatorio(event)">
-  <div class="modal-box" style="max-width: 700px; width: 100%;">
-    <div class="modal-title">📊 Relatório de Consumo</div>
-    <p class="modal-info">Analise as movimentações baseadas no seu histórico de estoque.</p>
+  <div class="modal-box" style="max-width: 800px; width: 100%;">
+    <div class="modal-title">📊 Relatório Detalhado de Consumo</div>
+    <p class="modal-info">Acompanhe as entradas, saídas e o saldo de movimentações por período.</p>
     
     <div style="margin-bottom: 20px;">
       <label>Período de Análise:</label>
@@ -558,23 +552,21 @@
       </select>
     </div>
 
-    <div class="grid-relatorio" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-      <div>
-        <h4 style="font-family:var(--mono); color:var(--red); font-size: 13px; margin-bottom: 8px;">⬇️ MAIS RETIRADOS (SAÍDAS)</h4>
-        <div style="border: 1px solid var(--border); border-radius: 8px; max-height: 250px; overflow-y: auto;">
-          <table class="relatorio-table">
-            <tbody id="corpo-relatorio-saidas"></tbody>
-          </table>
-        </div>
-      </div>
-      <div>
-        <h4 style="font-family:var(--mono); color:var(--green); font-size: 13px; margin-bottom: 8px;">⬆️ MAIS ADICIONADOS (ENTRADAS)</h4>
-        <div style="border: 1px solid var(--border); border-radius: 8px; max-height: 250px; overflow-y: auto;">
-          <table class="relatorio-table">
-            <tbody id="corpo-relatorio-entradas"></tbody>
-          </table>
-        </div>
-      </div>
+    <!-- Tabela consolidada -->
+    <div style="border: 1px solid var(--border); border-radius: 8px; max-height: 350px; overflow-y: auto;">
+      <table class="relatorio-table" style="width: 100%; border-collapse: collapse; font-size: 13px;">
+        <thead style="position: sticky; top: 0; background: var(--bg); border-bottom: 1px solid var(--border);">
+          <tr>
+            <th style="padding: 10px 14px; text-align: left; font-family: var(--mono); font-size: 11px; text-transform: uppercase;">Material</th>
+            <th style="padding: 10px 14px; text-align: left; font-family: var(--mono); font-size: 11px; text-transform: uppercase;">Categoria</th>
+            <th style="padding: 10px 14px; text-align: center; font-family: var(--mono); font-size: 11px; color: var(--green); text-transform: uppercase;">Entradas</th>
+            <th style="padding: 10px 14px; text-align: center; font-family: var(--mono); font-size: 11px; color: var(--red); text-transform: uppercase;">Saídas</th>
+            <th style="padding: 10px 14px; text-align: center; font-family: var(--mono); font-size: 11px; text-transform: uppercase;">Variação (Saldo)</th>
+            <th style="padding: 10px 14px; text-align: center; font-family: var(--mono); font-size: 11px; text-transform: uppercase;">Estoque Atual</th>
+          </tr>
+        </thead>
+        <tbody id="corpo-relatorio-tabela"></tbody>
+      </table>
     </div>
 
     <div class="modal-actions" style="margin-top: 24px;">
@@ -825,7 +817,7 @@
     janelaPrint.document.close();
   }
 
-  // ── NOVO: Relatório de Consumo ──
+  // ── NOVO: Relatório Detalhado de Consumo ──
   function abrirModalRelatorio() {
     document.getElementById('filtro-dias-relatorio').value = '15';
     renderRelatorio(15);
@@ -841,45 +833,55 @@
     const dataLimite = new Date();
     dataLimite.setDate(dataLimite.getDate() - dias);
 
-    let entradas = {};
-    let saidas = {};
+    let reportData = {};
+    items.forEach(i => {
+      reportData[i.nome] = {
+        nome: i.nome,
+        categoria: obterCategoriaItem(i.id),
+        atual: i.atual,
+        entradas: 0,
+        saidas: 0
+      };
+    });
 
     historico.forEach(h => {
       const dataMov = new Date(h.criado_em);
       if (dias === 0 || dataMov >= dataLimite) {
-        if (h.tipo === 'ENTRADA') {
-          entradas[h.item_nome] = (entradas[h.item_nome] || 0) + h.quantidade;
-        } else if (h.tipo === 'SAÍDA') {
-          saidas[h.item_nome] = (saidas[h.item_nome] || 0) + h.quantidade;
+        if (!reportData[h.item_nome]) {
+          reportData[h.item_nome] = { nome: h.item_nome, categoria: '-', atual: '-', entradas: 0, saidas: 0 };
         }
+        if (h.tipo === 'ENTRADA') reportData[h.item_nome].entradas += h.quantidade;
+        if (h.tipo === 'SAÍDA') reportData[h.item_nome].saidas += h.quantidade;
       }
     });
 
-    const arrEntradas = Object.keys(entradas).map(nome => ({ nome, total: entradas[nome] })).sort((a,b) => b.total - a.total);
-    const arrSaidas = Object.keys(saidas).map(nome => ({ nome, total: saidas[nome] })).sort((a,b) => b.total - a.total);
+    let ativos = Object.values(reportData).filter(i => i.entradas > 0 || i.saidas > 0);
+    
+    ativos.sort((a, b) => (b.entradas + b.saidas) - (a.entradas + a.saidas));
 
-    const tbodyEntradas = document.getElementById('corpo-relatorio-entradas');
-    if(arrEntradas.length === 0) {
-      tbodyEntradas.innerHTML = '<tr><td colspan="2" class="empty-state" style="padding:20px;">Sem entradas no período.</td></tr>';
+    const tbody = document.getElementById('corpo-relatorio-tabela');
+    
+    if(ativos.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state" style="padding:20px;">Nenhuma movimentação registrada neste período.</td></tr>';
     } else {
-      tbodyEntradas.innerHTML = arrEntradas.map(i => `
-        <tr>
-          <td>${esc(i.nome)}</td>
-          <td style="text-align:right; color:var(--green); font-weight:bold; font-family:var(--mono);">+${i.total}</td>
-        </tr>
-      `).join('');
-    }
+      tbody.innerHTML = ativos.map(i => {
+        const saldo = i.entradas - i.saidas;
+        let corSaldo = 'var(--subtle)';
+        let sinalSaldo = '';
+        if (saldo > 0) { corSaldo = 'var(--green)'; sinalSaldo = '+'; }
+        if (saldo < 0) { corSaldo = 'var(--red)'; }
 
-    const tbodySaidas = document.getElementById('corpo-relatorio-saidas');
-    if(arrSaidas.length === 0) {
-      tbodySaidas.innerHTML = '<tr><td colspan="2" class="empty-state" style="padding:20px;">Sem saídas no período.</td></tr>';
-    } else {
-      tbodySaidas.innerHTML = arrSaidas.map(i => `
-        <tr>
-          <td>${esc(i.nome)}</td>
-          <td style="text-align:right; color:var(--red); font-weight:bold; font-family:var(--mono);">-${i.total}</td>
-        </tr>
-      `).join('');
+        return `
+          <tr style="border-bottom: 1px solid var(--bg);">
+            <td style="padding: 12px 14px; font-weight: 600;">${esc(i.nome)}</td>
+            <td style="padding: 12px 14px;"><span class="badge categoria-badge">${esc(i.categoria)}</span></td>
+            <td style="padding: 12px 14px; text-align: center; color: var(--green); font-weight: bold; font-family: var(--mono);">${i.entradas > 0 ? '+' + i.entradas : '-'}</td>
+            <td style="padding: 12px 14px; text-align: center; color: var(--red); font-weight: bold; font-family: var(--mono);">${i.saidas > 0 ? '-' + i.saidas : '-'}</td>
+            <td style="padding: 12px 14px; text-align: center; color: ${corSaldo}; font-weight: bold; font-family: var(--mono);">${sinalSaldo}${saldo}</td>
+            <td style="padding: 12px 14px; text-align: center; font-family: var(--mono); font-weight: 700;">${i.atual}</td>
+          </tr>
+        `;
+      }).join('');
     }
   }
 
