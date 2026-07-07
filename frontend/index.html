@@ -89,6 +89,24 @@
     .kpi-value { font-family: var(--mono); font-size: 28px; font-weight: 700; color: var(--bright); }
     .kpi-label { font-size: 12px; color: var(--subtle); margin-top: 2px; }
 
+    /* ESTILOS DAS ABAS */
+    .tabs-wrapper {
+      display: flex; gap: 24px; margin-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .tab-btn {
+      background: transparent; border: none; padding: 12px 4px;
+      font-family: var(--sans); font-size: 15px; font-weight: 600;
+      color: var(--subtle); cursor: pointer;
+      border-bottom: 3px solid transparent; margin-bottom: -1px;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { color: var(--primary); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    
+    .aba-content { display: none; }
+    .aba-content.active { display: block; animation: fadein 0.3s ease; }
+
     button { cursor: pointer; transition: filter 0.15s, transform 0.1s; font-family: var(--sans); }
     button:hover { filter: brightness(1.1); transform: translateY(-1px); }
     button:active { transform: translateY(0); }
@@ -236,25 +254,24 @@
 
     .empty-state { text-align: center; color: var(--muted); padding: 48px 16px; font-size: 14px; }
 
+    /* Painel Histórico remodelado para nova aba */
     #historico-panel {
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px; padding: 24px; margin-top: 24px;
-      display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+      border-radius: 16px; padding: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);
     }
-    #historico-panel.visible { display: block; }
-    #historico-panel h3 { font-family: var(--mono); font-size: 13px; color: var(--dim); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 16px; }
+    #historico-panel h3 { font-family: var(--mono); font-size: 14px; color: var(--dim); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px;}
     .hist-item {
-      display: flex; align-items: center; gap: 12px; padding: 10px 0;
+      display: flex; align-items: center; gap: 12px; padding: 12px 0;
       border-bottom: 1px solid var(--bg); flex-wrap: wrap;
     }
     .hist-item:last-child { border-bottom: none; }
-    .hist-badge { padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+    .hist-badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; }
     .hist-badge.entrada { background: #dcfce7; color: #15803d; }
     .hist-badge.saida   { background: #fee2e2; color: #b91c1c; }
-    .hist-nome { font-weight: 600; font-size: 13px; flex: 1; min-width: 100px; }
-    .hist-qtd  { font-family: var(--mono); font-size: 13px; color: var(--secondary); }
-    .hist-obs  { font-size: 12px; color: var(--subtle); font-style: italic; }
-    .hist-hora { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-left: auto; }
+    .hist-nome { font-weight: 600; font-size: 14px; flex: 1; min-width: 150px; color: var(--bright); }
+    .hist-qtd  { font-family: var(--mono); font-size: 14px; color: var(--secondary); font-weight: bold; }
+    .hist-obs  { font-size: 13px; color: var(--subtle); font-style: italic; }
+    .hist-hora { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-left: auto; }
 
     .modal-overlay {
       display: none; position: fixed; inset: 0;
@@ -274,6 +291,10 @@
     .cat-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--bg); font-size: 14px; }
     .cat-item:last-child { border-bottom: none; }
     .cat-item-actions { display: flex; gap: 6px; }
+
+    .relatorio-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .relatorio-table td { padding: 10px 14px; border-bottom: 1px solid var(--bg); }
+    .relatorio-table tr:last-child td { border-bottom: none; }
 
     #loading-overlay {
       position: fixed; inset: 0; background: var(--bg);
@@ -317,6 +338,7 @@
       thead th, tbody td { padding: 10px 12px; }
       .action-wrap { flex-wrap: wrap; }
       .modal-box { padding: 24px 20px; }
+      .grid-relatorio { grid-template-columns: 1fr !important; }
     }
     @media (min-width: 701px) and (max-width: 1024px) {
       #kpi-grid { grid-template-columns: repeat(2, 1fr); }
@@ -372,89 +394,99 @@
     </div>
   </div>
 
-  <div id="form-panel">
-    <h3 id="form-title">+ Novo Material</h3>
-    <div class="form-grid">
-      <div class="full">
-        <label>Nome do material</label>
-        <input type="text" id="f-nome" placeholder="Ex: Luvas descartáveis P" oninput="atualizarPreview()" />
-      </div>
-      <div>
-        <label>Estoque mínimo</label>
-        <input type="number" id="f-minimo" min="0" placeholder="0" oninput="atualizarPreview()" />
-      </div>
-      <div>
-        <label>Estoque atual</label>
-        <input type="number" id="f-atual" min="0" placeholder="0" oninput="atualizarPreview()" />
-      </div>
-      <div>
-        <label>Estoque ideal</label>
-        <input type="number" id="f-ideal" min="0" placeholder="0" oninput="atualizarPreview()" />
-      </div>
-      <div>
-        <label>Categoria</label>
-        <div style="display: flex; gap: 8px;">
-          <select id="f-categoria" style="flex: 1;"></select>
-          <button type="button" class="btn-secondary" onclick="abrirModalCategorias()" style="padding: 0 14px;" title="Gerenciar Categorias">⚙️</button>
+  <div class="tabs-wrapper">
+    <button id="tab-btn-estoque" class="tab-btn active" onclick="mudarAba('estoque')">📦 Meu Estoque</button>
+    <button id="tab-btn-historico" class="tab-btn" onclick="mudarAba('historico')">⟳ Histórico de Movimentações</button>
+  </div>
+
+  <div id="aba-estoque" class="aba-content active">
+    <div id="form-panel">
+      <h3 id="form-title">+ Novo Material</h3>
+      <div class="form-grid">
+        <div class="full">
+          <label>Nome do material</label>
+          <input type="text" id="f-nome" placeholder="Ex: Luvas descartáveis P" oninput="atualizarPreview()" />
+        </div>
+        <div>
+          <label>Estoque mínimo</label>
+          <input type="number" id="f-minimo" min="0" placeholder="0" oninput="atualizarPreview()" />
+        </div>
+        <div>
+          <label>Estoque atual</label>
+          <input type="number" id="f-atual" min="0" placeholder="0" oninput="atualizarPreview()" />
+        </div>
+        <div>
+          <label>Estoque ideal</label>
+          <input type="number" id="f-ideal" min="0" placeholder="0" oninput="atualizarPreview()" />
+        </div>
+        <div>
+          <label>Categoria</label>
+          <div style="display: flex; gap: 8px;">
+            <select id="f-categoria" style="flex: 1;"></select>
+            <button type="button" class="btn-secondary" onclick="abrirModalCategorias()" style="padding: 0 14px;" title="Gerenciar Categorias">⚙️</button>
+          </div>
+        </div>
+        <div class="calc-preview">
+          Comprar: <strong id="preview-comprar">0</strong> unidades
         </div>
       </div>
-      <div class="calc-preview">
-        Comprar: <strong id="preview-comprar">0</strong> unidades
+      <div class="form-actions">
+        <button class="btn-primary" onclick="salvarItem()">Salvar</button>
+        <button class="btn-secondary" onclick="fecharForm()">Cancelar</button>
       </div>
     </div>
-    <div class="form-actions">
-      <button class="btn-primary" onclick="salvarItem()">Salvar</button>
-      <button class="btn-secondary" onclick="fecharForm()">Cancelar</button>
+
+    <div id="tabela-wrap">
+      <div class="tabela-header">
+        <div class="tabela-header-top">
+          <div class="tabela-title">MATERIAIS E INSUMOS</div>
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <button class="btn-secondary" onclick="abrirModalRelatorio()">📊 Relatório</button>
+            <button class="btn-secondary" onclick="abrirModalCompras()">📋 Lista de Compras</button>
+            <button class="btn-primary" onclick="abrirFormNovo()">+ Novo item</button>
+          </div>
+        </div>
+        <div class="tabela-header-bottom">
+          <div id="filtros">
+            <span>Filtrar:</span>
+            <button id="btn-filtro-todos"  class="filtro-btn ativo-todos" onclick="setFiltro('todos')">Todos</button>
+            <button id="btn-filtro-alerta" class="filtro-btn" onclick="setFiltro('alerta')">⚠ Reposição</button>
+            <span id="filtros-categorias" style="display:contents"></span>
+          </div>
+          <div class="search-wrap">
+            <input type="text" id="busca-material" class="search-input" placeholder="🔍 Buscar material..." oninput="setBusca(this.value)" />
+          </div>
+        </div>
+      </div>
+      <div class="tabela-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th class="th-sortable" onclick="organizarPor('nome')">Material <span id="sort-nome" class="sort-icon"></span></th>
+              <th class="th-sortable" onclick="organizarPor('minimo')">Mínimo <span id="sort-minimo" class="sort-icon"></span></th>
+              <th class="th-sortable" onclick="organizarPor('atual')">Atual <span id="sort-atual" class="sort-icon"></span></th>
+              <th class="th-sortable" onclick="organizarPor('ideal')">Ideal <span id="sort-ideal" class="sort-icon"></span></th>
+              <th class="th-sortable" onclick="organizarPor('comprar')">A comprar <span id="sort-comprar" class="sort-icon"></span></th>
+              <th class="th-sortable" onclick="organizarPor('status')">Status <span id="sort-status" class="sort-icon"></span></th>
+              <th class="th-sortable" onclick="organizarPor('categoria')">Categoria <span id="sort-categoria" class="sort-icon"></span></th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabela-body">
+            <tr><td colspan="8" class="empty-state">Nenhum item cadastrado ainda.</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <div id="tabela-wrap">
-    <div class="tabela-header">
-      <div class="tabela-header-top">
-        <div class="tabela-title">MATERIAIS E INSUMOS</div>
-        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-          <button class="btn-secondary" onclick="abrirModalRelatorio()">📊 Relatório</button>
-          <button class="btn-secondary" onclick="abrirModalCompras()">📋 Lista de Compras</button>
-          <button class="btn-primary" onclick="abrirFormNovo()">+ Novo item</button>
-        </div>
-      </div>
-      <div class="tabela-header-bottom">
-        <div id="filtros">
-          <span>Filtrar:</span>
-          <button id="btn-filtro-todos"  class="filtro-btn ativo-todos" onclick="setFiltro('todos')">Todos</button>
-          <button id="btn-filtro-alerta" class="filtro-btn" onclick="setFiltro('alerta')">⚠ Reposição</button>
-          <span id="filtros-categorias" style="display:contents"></span>
-        </div>
-        <div class="search-wrap">
-          <input type="text" id="busca-material" class="search-input" placeholder="🔍 Buscar material..." oninput="setBusca(this.value)" />
-        </div>
-      </div>
-    </div>
-    <div class="tabela-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th class="th-sortable" onclick="organizarPor('nome')">Material <span id="sort-nome" class="sort-icon"></span></th>
-            <th class="th-sortable" onclick="organizarPor('minimo')">Mínimo <span id="sort-minimo" class="sort-icon"></span></th>
-            <th class="th-sortable" onclick="organizarPor('atual')">Atual <span id="sort-atual" class="sort-icon"></span></th>
-            <th class="th-sortable" onclick="organizarPor('ideal')">Ideal <span id="sort-ideal" class="sort-icon"></span></th>
-            <th class="th-sortable" onclick="organizarPor('comprar')">A comprar <span id="sort-comprar" class="sort-icon"></span></th>
-            <th class="th-sortable" onclick="organizarPor('status')">Status <span id="sort-status" class="sort-icon"></span></th>
-            <th class="th-sortable" onclick="organizarPor('categoria')">Categoria <span id="sort-categoria" class="sort-icon"></span></th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody id="tabela-body">
-          <tr><td colspan="8" class="empty-state">Nenhum item cadastrado ainda.</td></tr>
-        </tbody>
-      </table>
+  <div id="aba-historico" class="aba-content">
+    <div id="historico-panel">
+      <h3>Lista de Registros de Entradas e Saídas</h3>
+      <div id="historico-lista"></div>
     </div>
   </div>
 
-  <div id="historico-panel">
-    <h3>⟳ Histórico de Movimentações</h3>
-    <div id="historico-lista"></div>
-  </div>
 </div>
 
 <div class="modal-overlay" id="modal-delete" onclick="fecharModalDelete(event)">
@@ -537,7 +569,6 @@
   </div>
 </div>
 
-<!-- NOVO: Modal Relatório Detalhado de Consumo -->
 <div class="modal-overlay" id="modal-relatorio" onclick="fecharModalRelatorio(event)">
   <div class="modal-box" style="max-width: 800px; width: 100%;">
     <div class="modal-title">📊 Relatório Detalhado de Consumo</div>
@@ -552,7 +583,6 @@
       </select>
     </div>
 
-    <!-- Tabela consolidada -->
     <div style="border: 1px solid var(--border); border-radius: 8px; max-height: 350px; overflow-y: auto;">
       <table class="relatorio-table" style="width: 100%; border-collapse: collapse; font-size: 13px;">
         <thead style="position: sticky; top: 0; background: var(--bg); border-bottom: 1px solid var(--border);">
@@ -596,6 +626,17 @@
   const LISTA_CAT_KEY  = 'versah_lista_categorias'; 
   
   let listaCategoriasAtivas = [];
+
+  // Lógica das Abas
+  function mudarAba(abaId) {
+    document.getElementById('aba-estoque').classList.remove('active');
+    document.getElementById('aba-historico').classList.remove('active');
+    document.getElementById('tab-btn-estoque').classList.remove('active');
+    document.getElementById('tab-btn-historico').classList.remove('active');
+
+    document.getElementById(`aba-${abaId}`).classList.add('active');
+    document.getElementById(`tab-btn-${abaId}`).classList.add('active');
+  }
 
   function carregarListaCategorias() {
     const salvas = localStorage.getItem(LISTA_CAT_KEY);
@@ -817,7 +858,6 @@
     janelaPrint.document.close();
   }
 
-  // ── NOVO: Relatório Detalhado de Consumo ──
   function abrirModalRelatorio() {
     document.getElementById('filtro-dias-relatorio').value = '15';
     renderRelatorio(15);
@@ -1063,10 +1103,12 @@
   }
 
   function renderHistorico() {
-    const panel = document.getElementById('historico-panel');
     const lista = document.getElementById('historico-lista');
-    if (historico.length === 0) { panel.classList.remove('visible'); return; }
-    panel.classList.add('visible');
+    if (historico.length === 0) { 
+      lista.innerHTML = '<div class="empty-state">Nenhuma movimentação registrada no histórico.</div>';
+      return; 
+    }
+    
     lista.innerHTML = historico.map(h => {
       const hora = new Date(h.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
       const tipoCSS = h.tipo === 'ENTRADA' ? 'entrada' : 'saida';
