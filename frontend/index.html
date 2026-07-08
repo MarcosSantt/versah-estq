@@ -995,16 +995,32 @@
   }
   document.getElementById('btn-sair').addEventListener('click', logout);
 
-  function calcularItem(item) {
-    const quantidadeComprar = Math.max(0, item.ideal - item.atual);
-    const precisaReposicao  = item.atual <= item.minimo;
-    const percentual        = item.ideal > 0 ? Math.min(100, Math.round((item.atual / item.ideal) * 100)) : 0;
+ function calcularItem(item) {
+    // Converte os valores que vêm do banco (texto) para números reais
+    const atualNum  = parseFloat(item.atual) || 0;
+    const minimoNum = parseFloat(item.minimo) || 0;
+    const idealNum  = parseFloat(item.ideal) || 0;
+
+    const quantidadeComprar = Math.max(0, idealNum - atualNum);
+    
+    // Agora a comparação matemática vai funcionar perfeitamente
+    const precisaReposicao  = atualNum <= minimoNum;
+    
+    const percentual        = idealNum > 0 ? Math.min(100, Math.round((atualNum / idealNum) * 100)) : 0;
     const categoria = obterCategoriaItem(item.id);
     
-    // FIX DOS DECIMAIS: Remover zeros inúteis ao realizar contas matemáticas (ex: 1.50 em vez de 1.5000023)
     const quantidadeComprarFixed = +quantidadeComprar.toFixed(3);
     
-    return { ...item, quantidadeComprar: quantidadeComprarFixed, precisaReposicao, percentual, categoria };
+    return { 
+      ...item, 
+      atual: atualNum,     
+      minimo: minimoNum,   
+      ideal: idealNum,     
+      quantidadeComprar: quantidadeComprarFixed, 
+      precisaReposicao, 
+      percentual, 
+      categoria 
+    };
   }
 
   function organizarPor(col) {
