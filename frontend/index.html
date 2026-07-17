@@ -805,10 +805,20 @@
       document.getElementById('modal-compras').style.display = 'none';
   }
 
-  function exportarComprasPDF() {
+ function exportarComprasPDF() {
     const calculados = items.map(calcularItem);
     const paraRepor = calculados.filter(i => i.precisaReposicao);
     if (paraRepor.length === 0) return showErro('Não há materiais para gerar o PDF.');
+
+    // 1. Agrupar os itens por categoria
+    const itensPorCategoria = {};
+    paraRepor.forEach(item => {
+      const cat = item.categoria || 'Sem categoria';
+      if (!itensPorCategoria[cat]) {
+        itensPorCategoria[cat] = [];
+      }
+      itensPorCategoria[cat].push(item);
+    });
 
     const janelaPrint = window.open('', '_blank');
     let html = `
@@ -821,7 +831,8 @@
           .marca { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #858175; }
           h1 { font-size: 22px; color: #1A1815; margin-top: 5px; border-bottom: 2px solid #C3A365; padding-bottom: 10px; }
           p { font-size: 13px; color: #6A6658; margin-bottom: 30px; }
-          table { width: 100%; border-collapse: collapse; }
+          .categoria-titulo { font-size: 16px; color: #C3A365; margin-top: 30px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #E2DDD3; padding-bottom: 5px; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
           th { background: #F4F3EF; padding: 12px; text-align: left; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #E2DDD3; color: #6A6658; }
           td { padding: 12px; border-bottom: 1px solid #E2DDD3; font-size: 13px; }
           .destaque { font-weight: bold; color: #1A1815; }
@@ -832,28 +843,31 @@
         <div class="marca">Versah · EstoqueControl</div>
         <h1>📋 Lista de Compras Automatizada</h1>
         <p>Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p>
-        <table>
-          <thead>
-            <tr>
-              <th>Material</th>
-              <th>Categoria</th>
-              <th style="text-align: center;">Qtd. Atual</th>
-              <th style="text-align: center;">Qtd. Ideal</th>
-              <th style="text-align: center;">A Comprar</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${paraRepor.map(i => `
+        
+        ${Object.keys(itensPorCategoria).sort().map(categoria => `
+          <h2 class="categoria-titulo">${categoria}</h2>
+          <table>
+            <thead>
               <tr>
-                <td class="destaque">${i.nome}</td>
-                <td>${i.categoria}</td>
-                <td style="text-align: center;">${i.atual}</td>
-                <td style="text-align: center;">${i.ideal}</td>
-                <td style="text-align: center;" class="qtd">${i.quantidadeComprar} un.</td>
+                <th style="width: 50%;">Material</th>
+                <th style="text-align: center;">Qtd. Atual</th>
+                <th style="text-align: center;">Qtd. Ideal</th>
+                <th style="text-align: center;">A Comprar</th>
               </tr>
-            `).join('')}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              ${itensPorCategoria[categoria].map(i => `
+                <tr>
+                  <td class="destaque">${i.nome}</td>
+                  <td style="text-align: center;">${i.atual}</td>
+                  <td style="text-align: center;">${i.ideal}</td>
+                  <td style="text-align: center;" class="qtd">${i.quantidadeComprar} un.</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `).join('')}
+        
         <script>
           window.onload = function() { window.print(); window.close(); }
         <\/script>
@@ -862,6 +876,7 @@
     `;
     janelaPrint.document.write(html);
     janelaPrint.document.close();
+  }
   }
 
   function abrirModalRelatorio() {
