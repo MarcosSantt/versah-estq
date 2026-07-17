@@ -388,20 +388,17 @@
     <div class="kpi-card">
       <div class="kpi-icon" style="background:#fef9ec">🛒</div>
       <div>
-        <!-- O valor abaixo agora formata decimais corretamente -->
         <div class="kpi-value" id="kpi-comprar-val">—</div>
         <div class="kpi-label">Volume de compras</div>
       </div>
     </div>
   </div>
 
-  <!-- NAVEGAÇÃO DAS ABAS -->
   <div class="tabs-wrapper">
     <button id="tab-btn-estoque" class="tab-btn active" onclick="mudarAba('estoque')">📦 Meu Estoque</button>
     <button id="tab-btn-historico" class="tab-btn" onclick="mudarAba('historico')">⟳ Histórico de Movimentações</button>
   </div>
 
-  <!-- ABA ESTOQUE -->
   <div id="aba-estoque" class="aba-content active">
     <div id="form-panel">
       <h3 id="form-title">+ Novo Material</h3>
@@ -483,7 +480,6 @@
     </div>
   </div>
 
-  <!-- ABA HISTÓRICO -->
   <div id="aba-historico" class="aba-content">
     <div id="historico-panel">
       <h3>Lista de Registros de Entradas e Saídas</h3>
@@ -493,7 +489,6 @@
 
 </div>
 
-<!-- Modais Restantes -->
 <div class="modal-overlay" id="modal-delete" onclick="fecharModalDelete(event)">
   <div class="modal-box">
     <div class="modal-title">Remover item</div>
@@ -511,7 +506,6 @@
     <p class="modal-info" id="modal-mov-info"></p>
     <div>
       <label>Quantidade</label>
-      <!-- NOVO: step="any" para permitir decimais no modal de movimentação -->
       <input type="number" id="modal-mov-qtd" min="0" step="any" placeholder="0"
              onkeydown="if(event.key==='Enter') confirmarMov()" style="margin-bottom:12px"/>
     </div>
@@ -713,7 +707,9 @@
 
   function excluirCategoria(nomeCat) {
     if (nomeCat === 'Sem categoria') return showErro('Não é possível excluir a categoria padrão.');
-    if (!confirm(`Tem certeza que deseja excluir "${nomeCat}"?\n\nOs itens voltarão para "Sem categoria".`)) return;
+    if (!confirm(`Tem certeza que deseja excluir "${nomeCat}"?
+
+Os itens voltarão para "Sem categoria".`)) return;
     listaCategoriasAtivas = listaCategoriasAtivas.filter(c => c !== nomeCat);
 
     const map = getCategoriasMap();
@@ -750,8 +746,8 @@
           <span>${esc(cat)}</span>
           ${isPadrao ? '<span style="color:var(--muted);font-size:12px;">(Padrão)</span>' : `
           <div class="cat-item-actions">
-            <button class="action-btn edit" title="Editar Nome" onclick="editarCategoria('${esc(cat).replace(/'/g, "\\\\'")}')">✏</button>
-            <button class="action-btn del" title="Excluir" onclick="excluirCategoria('${esc(cat).replace(/'/g, "\\\\'")}')">✕</button>
+            <button class="action-btn edit" title="Editar Nome" onclick="editarCategoria('${esc(cat).replace(/'/g, "\\'")}')">✏</button>
+            <button class="action-btn del" title="Excluir" onclick="excluirCategoria('${esc(cat).replace(/'/g, "\\'")}')">✕</button>
           </div>
           `}
         </div>
@@ -805,7 +801,7 @@
       document.getElementById('modal-compras').style.display = 'none';
   }
 
- function exportarComprasPDF() {
+  function exportarComprasPDF() {
     const calculados = items.map(calcularItem);
     const paraRepor = calculados.filter(i => i.precisaReposicao);
     if (paraRepor.length === 0) return showErro('Não há materiais para gerar o PDF.');
@@ -877,7 +873,6 @@
     janelaPrint.document.write(html);
     janelaPrint.document.close();
   }
-  }
 
   function abrirModalRelatorio() {
     document.getElementById('filtro-dias-relatorio').value = '15';
@@ -911,7 +906,6 @@
         if (!reportData[h.item_nome]) {
           reportData[h.item_nome] = { nome: h.item_nome, categoria: '-', atual: '-', entradas: 0, saidas: 0 };
         }
-        // Assegura que a leitura seja de números flutuantes para não quebrar nos decimais
         if (h.tipo === 'ENTRADA') reportData[h.item_nome].entradas += parseFloat(h.quantidade);
         if (h.tipo === 'SAÍDA') reportData[h.item_nome].saidas += parseFloat(h.quantidade);
       }
@@ -927,7 +921,6 @@
       tbody.innerHTML = '<tr><td colspan="6" class="empty-state" style="padding:20px;">Nenhuma movimentação registrada neste período.</td></tr>';
     } else {
       tbody.innerHTML = ativos.map(i => {
-        // .toFixed(3) com + na frente retira zeros inúteis mantendo precisão nos cálculos
         const saldo = +(i.entradas - i.saidas).toFixed(3);
         let corSaldo = 'var(--subtle)';
         let sinalSaldo = '';
@@ -1011,14 +1004,12 @@
   document.getElementById('btn-sair').addEventListener('click', logout);
 
  function calcularItem(item) {
-    // Converte os valores que vêm do banco (texto) para números reais
     const atualNum  = parseFloat(item.atual) || 0;
     const minimoNum = parseFloat(item.minimo) || 0;
     const idealNum  = parseFloat(item.ideal) || 0;
 
     const quantidadeComprar = Math.max(0, idealNum - atualNum);
     
-    // Agora a comparação matemática vai funcionar perfeitamente
     const precisaReposicao  = atualNum <= minimoNum;
     
     const percentual        = idealNum > 0 ? Math.min(100, Math.round((atualNum / idealNum) * 100)) : 0;
@@ -1057,7 +1048,6 @@
     document.getElementById('kpi-total-val').textContent   = calculados.length;
     document.getElementById('kpi-alerta-val').textContent  = totalAlerta;
     
-    // Mostrando total a comprar com suporte visual a casas decimais se necessário
     document.getElementById('kpi-comprar-val').textContent = +totalComprar.toFixed(3);
     
     document.getElementById('kpi-alerta').classList.toggle('alerta', totalAlerta > 0);
@@ -1067,7 +1057,7 @@
     const wrapCategorias = document.getElementById('filtros-categorias');
     wrapCategorias.innerHTML = categoriasPresentes.map(cat => {
       const ativo = filtro === cat ? ' ativo-categoria' : '';
-      return `<button class="filtro-btn${ativo}" onclick="setFiltro('${esc(cat).replace(/'/g, "\\\\'")}')">${esc(cat)}</button>`;
+      return `<button class="filtro-btn${ativo}" onclick="setFiltro('${esc(cat).replace(/'/g, "\\'")}')">${esc(cat)}</button>`;
     }).join('');
 
     let filtrados = calculados;
@@ -1211,7 +1201,6 @@
   }
 
   function atualizarPreview() {
-    // Trocado parseInt por parseFloat para suportar os cálculos na visualização prévia da tela
     const ideal = parseFloat(document.getElementById('f-ideal').value) || 0;
     const atual = parseFloat(document.getElementById('f-atual').value) || 0;
     let comprar = Math.max(0, ideal - atual);
@@ -1220,7 +1209,6 @@
 
   async function salvarItem() {
     const nome   = document.getElementById('f-nome').value.trim();
-    // Trocado parseInt por parseFloat para salvar com decimal
     const minimo = parseFloat(document.getElementById('f-minimo').value);
     const atual  = parseFloat(document.getElementById('f-atual').value);
     const ideal  = parseFloat(document.getElementById('f-ideal').value);
@@ -1312,7 +1300,6 @@
   }
 
   async function confirmarMov() {
-    // Trocado parseInt por parseFloat para poder enviar 1.5, 0.5 de quantidade, etc.
     const qtd = parseFloat(document.getElementById('modal-mov-qtd').value);
     const obs = document.getElementById('modal-mov-obs').value.trim();
     if (!qtd || qtd <= 0) return showErro('Informe uma quantidade válida.');
