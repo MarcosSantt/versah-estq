@@ -549,7 +549,7 @@
 <div class="modal-overlay" id="modal-compras" onclick="fecharModalCompras(event)">
   <div class="modal-box" style="max-width: 650px; width: 100%;">
     <div class="modal-title">📋 Lista de Compras Automatizada</div>
-    <p class="modal-info">Estes são os materiais que estão abaixo do estoque mínimo.</p>
+    <p class="modal-info">Estes são os materiais que precisam de reposição (estoque atual <strong>abaixo</strong> do mínimo).</p>
     
     <div style="max-height: 280px; overflow-y: auto; margin: 16px 0; border: 1px solid var(--border); border-radius: 10px;">
       <table style="width: 100%; border-collapse: collapse;">
@@ -651,31 +651,8 @@
       salvarListaCategorias();
     } else {
       listaCategoriasAtivas = JSON.parse(salvas);
-      if (!listaCategoriasAtivas.includes('Sem categoria')) {
-        listaCategoriasAtivas.unshift('Sem categoria');
-      }
     }
     atualizarSelectFormulario();
-  }
-
-  // Garante que toda categoria vinda do backend (gravada em algum item) exista
-  // na lista local de categorias. Sem isso, um item cuja categoria foi criada
-  // em outro dispositivo/navegador "sumia" (caía sempre em "Sem categoria"),
-  // porque a lista de nomes de categoria fica salva só no localStorage.
-  function sincronizarCategoriasComItens() {
-    let mudou = false;
-    items.forEach(item => {
-      const cat = (item.categoria || '').trim();
-      if (cat && !listaCategoriasAtivas.includes(cat)) {
-        listaCategoriasAtivas.push(cat);
-        mudou = true;
-      }
-    });
-    if (mudou) {
-      localStorage.setItem(LISTA_CAT_KEY, JSON.stringify(listaCategoriasAtivas));
-      atualizarSelectFormulario();
-      renderCategoriasModal();
-    }
   }
 
   function salvarListaCategorias() {
@@ -706,6 +683,7 @@
     listaCategoriasAtivas.push(nome);
     input.value = '';
     salvarListaCategorias();
+    document.getElementById('f-categoria').value = nome; // Seleciona automaticamente a categoria recém-criada
     showToast('Categoria adicionada!');
   }
 
@@ -729,9 +707,7 @@
 
   async function excluirCategoria(nomeCat) {
     if (nomeCat === 'Sem categoria') return showErro('Não é possível excluir a categoria padrão.');
-    if (!confirm(`Tem certeza que deseja excluir "${nomeCat}"?
-
-Os itens voltarão para "Sem categoria".`)) return;
+    if (!confirm(`Tem certeza que deseja excluir "${nomeCat}"?\n\nOs itens voltarão para "Sem categoria".`)) return;
     listaCategoriasAtivas = listaCategoriasAtivas.filter(c => c !== nomeCat);
 
     await renomearCategoriaEmItens(nomeCat, 'Sem categoria');
@@ -811,12 +787,12 @@ Os itens voltarão para "Sem categoria".`)) return;
 
   function abrirModalCompras() {
     const calculados = items.map(calcularItem);
-    // Só entram na lista de compras os itens que estão ABAIXO do estoque mínimo.
-    const paraRepor = calculados.filter(i => i.precisaReposicao);
+    // Filtra apenas itens estritamente ABAIXO do mínimo E que precisam ser comprados
+    const paraRepor = calculados.filter(i => i.precisaReposicao && i.quantidadeComprar > 0);
     
     const tbody = document.getElementById('corpo-compras-modal');
     if (paraRepor.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="padding: 32px;">🎉 Excelente! Nenhum item está abaixo do estoque mínimo no momento.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="padding: 32px;">🎉 Excelente! Nenhum item precisa ser comprado no momento.</td></tr>`;
     } else {
       tbody.innerHTML = paraRepor.map(i => `
         <tr style="border-bottom: 1px solid var(--bg);">
@@ -838,9 +814,9 @@ Os itens voltarão para "Sem categoria".`)) return;
 
   function exportarComprasPDF() {
     const calculados = items.map(calcularItem);
-    // Mesma regra da lista de compras: só itens abaixo do mínimo entram no PDF.
-    const paraRepor = calculados.filter(i => i.precisaReposicao);
-    if (paraRepor.length === 0) return showErro('Não há materiais abaixo do estoque mínimo para gerar o PDF.');
+    // Filtra apenas itens estritamente ABAIXO do mínimo E que precisam ser comprados
+    const paraRepor = calculados.filter(i => i.precisaReposicao && i.quantidadeComprar > 0);
+    if (paraRepor.length === 0) return showErro('Não há materiais para gerar o PDF.');
 
     // 1. Agrupar os itens por categoria
     const itensPorCategoria = {};
@@ -1017,7 +993,21 @@ Os itens voltarão para "Sem categoria".`)) return;
       if (res.status === 401) return logout();
       if (!res.ok) return showErro('Erro ao carregar estoque. Tente recarregar a página.');
       items = await res.json();
-      sincronizarCategoriasComItens();
+
+      // Sincroniza categorias que vieram da API e não estão no cache local
+      let mudou = false;
+      items.forEach(item => {
+        if (item.categoria && !listaCategoriasAtivas.includes(item.categoria) && item.categoria !== 'Sem categoria') {
+          listaCategoriasAtivas.push(item.categoria);
+          mudou = true;
+        }
+      });
+      if (mudou) {
+        localStorage.setItem(LISTA_CAT_KEY, JSON.stringify(listaCategoriasAtivas));
+        atualizarSelectFormulario();
+        renderCategoriasModal();
+      }
+
       render();
     } catch {
       showErro('Não foi possível carregar o estoque. Verifique a conexão.');
@@ -1047,11 +1037,11 @@ Os itens voltarão para "Sem categoria".`)) return;
 
     const quantidadeComprar = Math.max(0, idealNum - atualNum);
     
-    const precisaReposicao  = atualNum <= minimoNum;
+    // Alterado para mostrar APENAS itens com quantidade atual estritamente ABAIXO (<) do mínimo
+    const precisaReposicao  = atualNum < minimoNum;
     
     const percentual        = idealNum > 0 ? Math.min(100, Math.round((atualNum / idealNum) * 100)) : 0;
-    const categoriaBruta = (item.categoria || '').trim();
-    const categoria = categoriaBruta && listaCategoriasAtivas.includes(categoriaBruta) ? categoriaBruta : 'Sem categoria';
+    const categoria = listaCategoriasAtivas.includes(item.categoria) ? item.categoria : 'Sem categoria';
     const unidade = item.unidade || 'un';
     
     const quantidadeComprarFixed = +quantidadeComprar.toFixed(3);
@@ -1282,7 +1272,6 @@ Os itens voltarão para "Sem categoria".`)) return;
       } else {
         items.push(data);
       }
-      sincronizarCategoriasComItens();
       fecharForm();
       render();
       showToast(editandoId !== null ? '✓ Item atualizado.' : '✓ Item adicionado.');
