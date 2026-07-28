@@ -137,14 +137,14 @@
       color: var(--dim); font-family: var(--mono);
       letter-spacing: 0.07em; text-transform: uppercase;
     }
-    input[type=text], input[type=number], select#f-categoria {
+    input[type=text], input[type=number], select#f-categoria, select#f-unidade {
       width: 100%; padding: 12px 14px; background: var(--surface);
       border: 1px solid var(--border); border-radius: 10px;
       color: var(--primary); font-size: 16px; font-family: var(--sans);
       transition: border-color 0.15s, box-shadow 0.15s;
     }
     input::placeholder { color: var(--muted); }
-    input:focus, select#f-categoria:focus {
+    input:focus, select#f-categoria:focus, select#f-unidade:focus {
       outline: none; border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(195, 163, 101, 0.2);
     }
@@ -426,6 +426,13 @@
             <button type="button" class="btn-secondary" onclick="abrirModalCategorias()" style="padding: 0 14px;" title="Gerenciar Categorias">⚙️</button>
           </div>
         </div>
+        <div>
+          <label>Unidade de medida</label>
+          <select id="f-unidade">
+            <option value="un">Unidade (un)</option>
+            <option value="pct">Pacote (pct)</option>
+          </select>
+        </div>
         <div class="calc-preview">
           Comprar: <strong id="preview-comprar">0</strong> unidades
         </div>
@@ -542,7 +549,7 @@
 <div class="modal-overlay" id="modal-compras" onclick="fecharModalCompras(event)">
   <div class="modal-box" style="max-width: 650px; width: 100%;">
     <div class="modal-title">📋 Lista de Compras Automatizada</div>
-    <p class="modal-info">Estes são os materiais que precisam de reposição imediata (abaixo do estoque mínimo).</p>
+    <p class="modal-info">Estes são os materiais que precisam de reposição (quantidade a comprar maior que zero).</p>
     
     <div style="max-height: 280px; overflow-y: auto; margin: 16px 0; border: 1px solid var(--border); border-radius: 10px;">
       <table style="width: 100%; border-collapse: collapse;">
@@ -622,7 +629,6 @@
   let sortCol = 'nome';
   let sortAsc = true;
 
-  const CATEGORIAS_KEY = 'versah_categorias';       
   const LISTA_CAT_KEY  = 'versah_lista_categorias'; 
   
   let listaCategoriasAtivas = [];
@@ -680,7 +686,7 @@
     showToast('Categoria adicionada!');
   }
 
-  function editarCategoria(nomeAntigo) {
+  async function editarCategoria(nomeAntigo) {
     if (nomeAntigo === 'Sem categoria') return showErro('Não é possível editar a categoria padrão.');
     const novoNome = prompt(`Renomear categoria "${nomeAntigo}" para:`, nomeAntigo);
     if (!novoNome || novoNome.trim() === '' || novoNome === nomeAntigo) return;
@@ -691,39 +697,47 @@
     const index = listaCategoriasAtivas.indexOf(nomeAntigo);
     if (index !== -1) listaCategoriasAtivas[index] = nomeFinal;
 
-    const map = getCategoriasMap();
-    let mudouAlgum = false;
-    for (let id in map) {
-      if (map[id] === nomeAntigo) {
-        map[id] = nomeFinal;
-        mudouAlgum = true;
-      }
-    }
-    if (mudouAlgum) localStorage.setItem(CATEGORIAS_KEY, JSON.stringify(map));
+    await renomearCategoriaEmItens(nomeAntigo, nomeFinal);
+
     if (filtro === nomeAntigo) filtro = nomeFinal;
     salvarListaCategorias();
     showToast('Categoria renomeada.');
   }
 
-  function excluirCategoria(nomeCat) {
+  async function excluirCategoria(nomeCat) {
     if (nomeCat === 'Sem categoria') return showErro('Não é possível excluir a categoria padrão.');
     if (!confirm(`Tem certeza que deseja excluir "${nomeCat}"?
 
 Os itens voltarão para "Sem categoria".`)) return;
     listaCategoriasAtivas = listaCategoriasAtivas.filter(c => c !== nomeCat);
 
-    const map = getCategoriasMap();
-    let mudouAlgum = false;
-    for (let id in map) {
-      if (map[id] === nomeCat) {
-        map[id] = 'Sem categoria';
-        mudouAlgum = true;
-      }
-    }
-    if (mudouAlgum) localStorage.setItem(CATEGORIAS_KEY, JSON.stringify(map));
+    await renomearCategoriaEmItens(nomeCat, 'Sem categoria');
+
     if (filtro === nomeCat) filtro = 'todos';
     salvarListaCategorias();
     showToast('Categoria excluída.');
+  }
+
+  // Atualiza no backend todos os itens que estavam com "nomeAntigo" para "nomeNovo",
+  // garantindo que a mudança de categoria fique salva no servidor (e não só neste
+  // dispositivo), para que apareça igual no notebook e no celular.
+  async function renomearCategoriaEmItens(nomeAntigo, nomeNovo) {
+    const afetados = items.filter(i => (i.categoria || 'Sem categoria') === nomeAntigo);
+    for (const item of afetados) {
+      try {
+        const res = await fetch(`${API}/estoque/${item.id}`, {
+          method: 'PUT', headers: authHeaders(),
+          body: JSON.stringify({
+            nome: item.nome, minimo: item.minimo, atual: item.atual, ideal: item.ideal,
+            categoria: nomeNovo, unidade: item.unidade || 'un'
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          items = items.map(i => i.id === item.id ? data : i);
+        }
+      } catch {}
+    }
   }
 
   function abrirModalCategorias() {
@@ -755,33 +769,30 @@ Os itens voltarão para "Sem categoria".`)) return;
     }).join('');
   }
 
-  function getCategoriasMap() {
-    try { return JSON.parse(localStorage.getItem(CATEGORIAS_KEY) || '{}'); } 
-    catch { return {}; }
-  }
-  function setCategoriaItem(id, categoria) {
-    const map = getCategoriasMap();
-    map[id] = categoria;
-    localStorage.setItem(CATEGORIAS_KEY, JSON.stringify(map));
-  }
-  function removerCategoriaItem(id) {
-    const map = getCategoriasMap();
-    delete map[id];
-    localStorage.setItem(CATEGORIAS_KEY, JSON.stringify(map));
-  }
+  // Categoria e unidade agora vêm diretamente do item retornado pela API
+  // (persistidas no backend), evitando divergência entre dispositivos.
   function obterCategoriaItem(id) {
-    const map = getCategoriasMap();
-    const cat = map[id] || 'Sem categoria';
+    const item = items.find(i => i.id === id);
+    const cat = (item && item.categoria) ? item.categoria : 'Sem categoria';
     return listaCategoriasAtivas.includes(cat) ? cat : 'Sem categoria';
+  }
+
+  function obterUnidadeItem(id) {
+    const item = items.find(i => i.id === id);
+    return (item && item.unidade) ? item.unidade : 'un';
+  }
+
+  function rotuloUnidade(u) {
+    return u === 'pct' ? 'pct' : 'un';
   }
 
   function abrirModalCompras() {
     const calculados = items.map(calcularItem);
-    const paraRepor = calculados.filter(i => i.precisaReposicao);
+    const paraRepor = calculados.filter(i => i.quantidadeComprar > 0);
     
     const tbody = document.getElementById('corpo-compras-modal');
     if (paraRepor.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="padding: 32px;">🎉 Excelente! Nenhum item atingiu o estoque mínimo. Tudo abastecido!</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="padding: 32px;">🎉 Excelente! Nenhum item precisa ser comprado no momento.</td></tr>`;
     } else {
       tbody.innerHTML = paraRepor.map(i => `
         <tr style="border-bottom: 1px solid var(--bg);">
@@ -789,7 +800,7 @@ Os itens voltarão para "Sem categoria".`)) return;
           <td style="padding: 12px 14px;"><span class="badge categoria-badge">${esc(i.categoria)}</span></td>
           <td style="padding: 12px 14px; text-align: center; font-family: var(--mono);">${i.atual}</td>
           <td style="padding: 12px 14px; text-align: center; font-family: var(--mono);">${i.ideal}</td>
-          <td style="padding: 12px 14px; text-align: center; font-family: var(--mono); font-weight: 700; color: var(--accent);">${i.quantidadeComprar}</td>
+          <td style="padding: 12px 14px; text-align: center; font-family: var(--mono); font-weight: 700; color: var(--accent);">${i.quantidadeComprar} ${esc(rotuloUnidade(i.unidade))}</td>
         </tr>
       `).join('');
     }
@@ -803,7 +814,7 @@ Os itens voltarão para "Sem categoria".`)) return;
 
   function exportarComprasPDF() {
     const calculados = items.map(calcularItem);
-    const paraRepor = calculados.filter(i => i.precisaReposicao);
+    const paraRepor = calculados.filter(i => i.quantidadeComprar > 0);
     if (paraRepor.length === 0) return showErro('Não há materiais para gerar o PDF.');
 
     // 1. Agrupar os itens por categoria
@@ -845,7 +856,7 @@ Os itens voltarão para "Sem categoria".`)) return;
           <table>
             <thead>
               <tr>
-                <th style="width: 50%;">Material</th>
+                <th style="width: 45%;">Material</th>
                 <th style="text-align: center;">Qtd. Atual</th>
                 <th style="text-align: center;">Qtd. Ideal</th>
                 <th style="text-align: center;">A Comprar</th>
@@ -857,7 +868,7 @@ Os itens voltarão para "Sem categoria".`)) return;
                   <td class="destaque">${i.nome}</td>
                   <td style="text-align: center;">${i.atual}</td>
                   <td style="text-align: center;">${i.ideal}</td>
-                  <td style="text-align: center;" class="qtd">${i.quantidadeComprar} un.</td>
+                  <td style="text-align: center;" class="qtd">${i.quantidadeComprar} ${rotuloUnidade(i.unidade)}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -1013,7 +1024,8 @@ Os itens voltarão para "Sem categoria".`)) return;
     const precisaReposicao  = atualNum <= minimoNum;
     
     const percentual        = idealNum > 0 ? Math.min(100, Math.round((atualNum / idealNum) * 100)) : 0;
-    const categoria = obterCategoriaItem(item.id);
+    const categoria = listaCategoriasAtivas.includes(item.categoria) ? item.categoria : 'Sem categoria';
+    const unidade = item.unidade || 'un';
     
     const quantidadeComprarFixed = +quantidadeComprar.toFixed(3);
     
@@ -1025,7 +1037,8 @@ Os itens voltarão para "Sem categoria".`)) return;
       quantidadeComprar: quantidadeComprarFixed, 
       precisaReposicao, 
       percentual, 
-      categoria 
+      categoria,
+      unidade
     };
   }
 
@@ -1117,7 +1130,7 @@ Os itens voltarão para "Sem categoria".`)) return;
             </div>
           </td>
           <td class="cell-mono">${item.ideal}</td>
-          <td class="cell-comprar ${item.quantidadeComprar > 0 ? 'need' : 'ok'}">${item.quantidadeComprar}</td>
+          <td class="cell-comprar ${item.quantidadeComprar > 0 ? 'need' : 'ok'}">${item.quantidadeComprar} <span style="font-size:11px;font-weight:400;color:var(--subtle)">${esc(rotuloUnidade(item.unidade))}</span></td>
           <td>
             <span class="badge ${item.precisaReposicao ? 'repor' : 'ok'}">
               ${item.precisaReposicao ? '⚠ Repor' : '✓ OK'}
@@ -1172,6 +1185,7 @@ Os itens voltarão para "Sem categoria".`)) return;
     ['f-nome','f-minimo','f-atual','f-ideal'].forEach(id => document.getElementById(id).value = '');
     const catSelect = document.getElementById('f-categoria');
     catSelect.value = listaCategoriasAtivas.includes('Sem categoria') ? 'Sem categoria' : listaCategoriasAtivas[0];
+    document.getElementById('f-unidade').value = 'un';
     document.getElementById('preview-comprar').textContent = '0';
     document.getElementById('form-panel').classList.add('visible');
     setTimeout(() => document.getElementById('f-nome').focus(), 100);
@@ -1187,6 +1201,7 @@ Os itens voltarão para "Sem categoria".`)) return;
     document.getElementById('f-atual').value  = item.atual;
     document.getElementById('f-ideal').value  = item.ideal;
     document.getElementById('f-categoria').value = obterCategoriaItem(id);
+    document.getElementById('f-unidade').value = obterUnidadeItem(id);
     atualizarPreview();
     document.getElementById('form-panel').classList.add('visible');
     setTimeout(() => {
@@ -1213,6 +1228,7 @@ Os itens voltarão para "Sem categoria".`)) return;
     const atual  = parseFloat(document.getElementById('f-atual').value);
     const ideal  = parseFloat(document.getElementById('f-ideal').value);
     const categoria = document.getElementById('f-categoria').value || 'Sem categoria';
+    const unidade = document.getElementById('f-unidade').value || 'un';
 
     if (!nome) return showErro('Informe o nome do material.');
     if ([minimo, atual, ideal].some(v => isNaN(v) || v < 0)) return showErro('Preencha todos os campos com valores numéricos válidos (≥ 0).');
@@ -1223,12 +1239,12 @@ Os itens voltarão para "Sem categoria".`)) return;
       if (editandoId !== null) {
         res = await fetch(`${API}/estoque/${editandoId}`, {
           method: 'PUT', headers: authHeaders(),
-          body: JSON.stringify({ nome, minimo, atual, ideal })
+          body: JSON.stringify({ nome, minimo, atual, ideal, categoria, unidade })
         });
       } else {
         res = await fetch(`${API}/estoque`, {
           method: 'POST', headers: authHeaders(),
-          body: JSON.stringify({ nome, minimo, atual, ideal })
+          body: JSON.stringify({ nome, minimo, atual, ideal, categoria, unidade })
         });
       }
       const data = await res.json();
@@ -1236,10 +1252,8 @@ Os itens voltarão para "Sem categoria".`)) return;
 
       if (editandoId !== null) {
         items = items.map(i => i.id === editandoId ? data : i);
-        setCategoriaItem(editandoId, categoria);
       } else {
         items.push(data);
-        setCategoriaItem(data.id, categoria);
       }
       fecharForm();
       render();
@@ -1266,7 +1280,6 @@ Os itens voltarão para "Sem categoria".`)) return;
       if (!res.ok) { const d = await res.json(); return showErro(d.erro || 'Erro ao remover.'); }
       items = items.filter(i => i.id !== deleteId);
       historico = historico.filter(h => h.item_id !== deleteId);
-      removerCategoriaItem(deleteId);
       deleteId = null;
       document.getElementById('modal-delete').style.display = 'none';
       render();
