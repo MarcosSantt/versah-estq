@@ -549,7 +549,7 @@
 <div class="modal-overlay" id="modal-compras" onclick="fecharModalCompras(event)">
   <div class="modal-box" style="max-width: 650px; width: 100%;">
     <div class="modal-title">📋 Lista de Compras Automatizada</div>
-    <p class="modal-info">Estes são os materiais que precisam de reposição (quantidade a comprar maior que zero).</p>
+    <p class="modal-info">Estes são os materiais que precisam de reposição (estoque atual abaixo ou igual ao mínimo).</p>
     
     <div style="max-height: 280px; overflow-y: auto; margin: 16px 0; border: 1px solid var(--border); border-radius: 10px;">
       <table style="width: 100%; border-collapse: collapse;">
@@ -788,7 +788,7 @@ Os itens voltarão para "Sem categoria".`)) return;
 
   function abrirModalCompras() {
     const calculados = items.map(calcularItem);
-    const paraRepor = calculados.filter(i => i.quantidadeComprar > 0);
+    const paraRepor = calculados.filter(i => i.precisaReposicao && i.quantidadeComprar > 0);
     
     const tbody = document.getElementById('corpo-compras-modal');
     if (paraRepor.length === 0) {
@@ -814,7 +814,7 @@ Os itens voltarão para "Sem categoria".`)) return;
 
   function exportarComprasPDF() {
     const calculados = items.map(calcularItem);
-    const paraRepor = calculados.filter(i => i.quantidadeComprar > 0);
+    const paraRepor = calculados.filter(i => i.precisaReposicao && i.quantidadeComprar > 0);
     if (paraRepor.length === 0) return showErro('Não há materiais para gerar o PDF.');
 
     // 1. Agrupar os itens por categoria
