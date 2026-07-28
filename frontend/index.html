@@ -549,7 +549,7 @@
 <div class="modal-overlay" id="modal-compras" onclick="fecharModalCompras(event)">
   <div class="modal-box" style="max-width: 650px; width: 100%;">
     <div class="modal-title">📋 Lista de Compras Automatizada</div>
-    <p class="modal-info">Estes são os materiais que precisam de reposição (estoque atual <strong>abaixo</strong> do mínimo).</p>
+    <p class="modal-info">Estes são os materiais que precisam de reposição (estoque atual estritamente <strong>abaixo</strong> do mínimo).</p>
     
     <div style="max-height: 280px; overflow-y: auto; margin: 16px 0; border: 1px solid var(--border); border-radius: 10px;">
       <table style="width: 100%; border-collapse: collapse;">
@@ -630,8 +630,31 @@
   let sortAsc = true;
 
   const LISTA_CAT_KEY  = 'versah_lista_categorias'; 
+  const ITEM_CAT_KEY   = 'versah_item_categorias';
+  const ITEM_UN_KEY    = 'versah_item_unidades';
   
   let listaCategoriasAtivas = [];
+
+  // ====== FUNÇÕES PARA FORÇAR SALVAMENTO LOCAL DE CATEGORIAS ======
+  // O backend não armazena categoria/unidade nativamente. Isso contorna o problema.
+  function salvarCamposLocais(id, cat, un) {
+    let savedCats = JSON.parse(localStorage.getItem(ITEM_CAT_KEY) || '{}');
+    let savedUns = JSON.parse(localStorage.getItem(ITEM_UN_KEY) || '{}');
+    savedCats[id] = cat;
+    savedUns[id] = un;
+    localStorage.setItem(ITEM_CAT_KEY, JSON.stringify(savedCats));
+    localStorage.setItem(ITEM_UN_KEY, JSON.stringify(savedUns));
+  }
+
+  function carregarCamposLocais() {
+    let savedCats = JSON.parse(localStorage.getItem(ITEM_CAT_KEY) || '{}');
+    let savedUns = JSON.parse(localStorage.getItem(ITEM_UN_KEY) || '{}');
+    items.forEach(i => {
+      if (savedCats[i.id]) i.categoria = savedCats[i.id];
+      if (savedUns[i.id]) i.unidade = savedUns[i.id];
+    });
+  }
+  // =================================================================
 
   // Lógica das Abas
   function mudarAba(abaId) {
@@ -683,7 +706,7 @@
     listaCategoriasAtivas.push(nome);
     input.value = '';
     salvarListaCategorias();
-    document.getElementById('f-categoria').value = nome; // Seleciona automaticamente a categoria recém-criada
+    document.getElementById('f-categoria').value = nome; // Seleciona automaticamente
     showToast('Categoria adicionada!');
   }
 
@@ -717,9 +740,6 @@
     showToast('Categoria excluída.');
   }
 
-  // Atualiza no backend todos os itens que estavam com "nomeAntigo" para "nomeNovo",
-  // garantindo que a mudança de categoria fique salva no servidor (e não só neste
-  // dispositivo), para que apareça igual no notebook e no celular.
   async function renomearCategoriaEmItens(nomeAntigo, nomeNovo) {
     const afetados = items.filter(i => (i.categoria || 'Sem categoria') === nomeAntigo);
     for (const item of afetados) {
@@ -733,6 +753,11 @@
         });
         if (res.ok) {
           const data = await res.json();
+          // Força a inserção da categoria e unidade no objeto e salva localmente
+          data.categoria = nomeNovo;
+          data.unidade = item.unidade || 'un';
+          salvarCamposLocais(data.id, data.categoria, data.unidade);
+          
           items = items.map(i => i.id === item.id ? data : i);
         }
       } catch {}
@@ -768,8 +793,6 @@
     }).join('');
   }
 
-  // Categoria e unidade agora vêm diretamente do item retornado pela API
-  // (persistidas no backend), evitando divergência entre dispositivos.
   function obterCategoriaItem(id) {
     const item = items.find(i => i.id === id);
     const cat = (item && item.categoria) ? item.categoria : 'Sem categoria';
@@ -787,7 +810,7 @@
 
   function abrirModalCompras() {
     const calculados = items.map(calcularItem);
-    // Filtra apenas itens estritamente ABAIXO do mínimo E que precisam ser comprados
+    // Somente itens onde a quantidade atual é estritamente MENOR que a mínima
     const paraRepor = calculados.filter(i => i.precisaReposicao && i.quantidadeComprar > 0);
     
     const tbody = document.getElementById('corpo-compras-modal');
@@ -814,11 +837,11 @@
 
   function exportarComprasPDF() {
     const calculados = items.map(calcularItem);
-    // Filtra apenas itens estritamente ABAIXO do mínimo E que precisam ser comprados
+    // Somente itens onde a quantidade atual é estritamente MENOR que a mínima
     const paraRepor = calculados.filter(i => i.precisaReposicao && i.quantidadeComprar > 0);
     if (paraRepor.length === 0) return showErro('Não há materiais para gerar o PDF.');
 
-    // 1. Agrupar os itens por categoria
+    // Agrupar os itens por categoria
     const itensPorCategoria = {};
     paraRepor.forEach(item => {
       const cat = item.categoria || 'Sem categoria';
@@ -992,9 +1015,12 @@
       const res = await fetch(`${API}/estoque`, { headers: authHeaders() });
       if (res.status === 401) return logout();
       if (!res.ok) return showErro('Erro ao carregar estoque. Tente recarregar a página.');
+      
       items = await res.json();
 
-      // Sincroniza categorias que vieram da API e não estão no cache local
+      // Como o backend parece ignorar a coluna de categorias, nós as recuperamos localmente!
+      carregarCamposLocais();
+
       let mudou = false;
       items.forEach(item => {
         if (item.categoria && !listaCategoriasAtivas.includes(item.categoria) && item.categoria !== 'Sem categoria') {
@@ -1037,8 +1063,8 @@
 
     const quantidadeComprar = Math.max(0, idealNum - atualNum);
     
-    // Alterado para mostrar APENAS itens com quantidade atual estritamente ABAIXO (<) do mínimo
-    const precisaReposicao  = atualNum < minimoNum;
+    // Regra estrita: só entra em reposição se for estritamente MENOR que o mínimo.
+    const precisaReposicao  = atualNum < minimoNum; 
     
     const percentual        = idealNum > 0 ? Math.min(100, Math.round((atualNum / idealNum) * 100)) : 0;
     const categoria = listaCategoriasAtivas.includes(item.categoria) ? item.categoria : 'Sem categoria';
@@ -1267,6 +1293,11 @@
       const data = await res.json();
       if (!res.ok) return showErro(data.erro || 'Erro ao salvar.');
 
+      // Se o backend jogar a categoria/unidade fora, forçamos no objeto e salvamos no LocalStorage
+      data.categoria = categoria;
+      data.unidade = unidade;
+      salvarCamposLocais(data.id, categoria, unidade);
+
       if (editandoId !== null) {
         items = items.map(i => i.id === editandoId ? data : i);
       } else {
@@ -1340,6 +1371,11 @@
       });
       const data = await res.json();
       if (!res.ok) return showErro(data.erro || 'Erro na movimentação.');
+
+      // Preserva as informações locais que possam ter vindo vazias
+      data.categoria = items.find(i => i.id === movId)?.categoria || 'Sem categoria';
+      data.unidade = items.find(i => i.id === movId)?.unidade || 'un';
+
       items = items.map(i => i.id === movId ? data : i);
       document.getElementById('modal-mov').style.display = 'none';
       render();
