@@ -3,17 +3,17 @@
  * Node.js + Express + PostgreSQL + JWT
  * ─────────────────────────────────────
  * Rotas:
- *   POST   /api/auth/cadastro       — cria conta
- *   POST   /api/auth/login          — autentica e devolve JWT
- *   GET    /api/auth/me             — retorna dados do usuário logado
+ * POST   /api/auth/cadastro       — cria conta
+ * POST   /api/auth/login          — autentica e devolve JWT
+ * GET    /api/auth/me             — retorna dados do usuário logado
  *
- *   GET    /api/estoque             — lista itens do usuário logado
- *   POST   /api/estoque             — cria item
- *   PUT    /api/estoque/:id         — edita item
- *   DELETE /api/estoque/:id         — remove item
- *   POST   /api/estoque/:id/mover   — registra entrada ou saída
+ * GET    /api/estoque             — lista itens do usuário logado
+ * POST   /api/estoque             — cria item
+ * PUT    /api/estoque/:id         — edita item
+ * DELETE /api/estoque/:id         — remove item
+ * POST   /api/estoque/:id/mover   — registra entrada ou saída
  *
- *   GET    /api/historico           — últimas 50 movimentações do usuário
+ * GET    /api/historico           — últimas 50 movimentações do usuário
  */
 
 const express   = require('express');
@@ -143,7 +143,7 @@ app.get('/api/auth/me', autenticar, async (req, res) => {
 app.get('/api/estoque', autenticar, async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, nome, atual, minimo, ideal FROM estoque_items WHERE usuario_id = $1 ORDER BY nome',
+      'SELECT id, nome, atual, minimo, ideal, categoria, unidade FROM estoque_items WHERE usuario_id = $1 ORDER BY nome',
       [req.usuario.id]
     );
     res.json(result.rows);
@@ -157,7 +157,7 @@ app.get('/api/estoque', autenticar, async (req, res) => {
 // ESTOQUE — Criar item
 // ─────────────────────────────────────────────────────────
 app.post('/api/estoque', autenticar, async (req, res) => {
-  const { nome, atual, minimo, ideal } = req.body;
+  const { nome, atual, minimo, ideal, categoria, unidade } = req.body;
 
   if (!nome || atual == null || minimo == null || ideal == null)
     return res.status(400).json({ erro: 'Campos obrigatórios: nome, atual, minimo, ideal.' });
@@ -168,12 +168,15 @@ app.post('/api/estoque', autenticar, async (req, res) => {
   if (ideal < minimo)
     return res.status(400).json({ erro: 'Estoque ideal deve ser maior ou igual ao mínimo.' });
 
+  const categoriaFinal = (categoria && categoria.trim()) ? categoria.trim() : 'Sem categoria';
+  const unidadeFinal   = (unidade === 'pct') ? 'pct' : 'un';
+
   try {
     const result = await pool.query(
-      `INSERT INTO estoque_items (usuario_id, nome, atual, minimo, ideal)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, nome, atual, minimo, ideal`,
-      [req.usuario.id, nome.trim(), atual, minimo, ideal]
+      `INSERT INTO estoque_items (usuario_id, nome, atual, minimo, ideal, categoria, unidade)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, nome, atual, minimo, ideal, categoria, unidade`,
+      [req.usuario.id, nome.trim(), atual, minimo, ideal, categoriaFinal, unidadeFinal]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -186,7 +189,7 @@ app.post('/api/estoque', autenticar, async (req, res) => {
 // ESTOQUE — Editar item
 // ─────────────────────────────────────────────────────────
 app.put('/api/estoque/:id', autenticar, async (req, res) => {
-  const { nome, atual, minimo, ideal } = req.body;
+  const { nome, atual, minimo, ideal, categoria, unidade } = req.body;
   const itemId = parseInt(req.params.id);
 
   if (!nome || atual == null || minimo == null || ideal == null)
@@ -195,14 +198,17 @@ app.put('/api/estoque/:id', autenticar, async (req, res) => {
   if (ideal < minimo)
     return res.status(400).json({ erro: 'Estoque ideal deve ser maior ou igual ao mínimo.' });
 
+  const categoriaFinal = (categoria && categoria.trim()) ? categoria.trim() : 'Sem categoria';
+  const unidadeFinal   = (unidade === 'pct') ? 'pct' : 'un';
+
   try {
-    // WHERE usuario_id = $5 garante que o dono não edite item de outro usuário
+    // WHERE usuario_id = $8 garante que o dono não edite item de outro usuário
     const result = await pool.query(
       `UPDATE estoque_items
-       SET nome = $1, atual = $2, minimo = $3, ideal = $4, atualizado_em = NOW()
-       WHERE id = $5 AND usuario_id = $6
-       RETURNING id, nome, atual, minimo, ideal`,
-      [nome.trim(), atual, minimo, ideal, itemId, req.usuario.id]
+       SET nome = $1, atual = $2, minimo = $3, ideal = $4, categoria = $5, unidade = $6, atualizado_em = NOW()
+       WHERE id = $7 AND usuario_id = $8
+       RETURNING id, nome, atual, minimo, ideal, categoria, unidade`,
+      [nome.trim(), atual, minimo, ideal, categoriaFinal, unidadeFinal, itemId, req.usuario.id]
     );
     if (result.rows.length === 0)
       return res.status(404).json({ erro: 'Item não encontrado ou sem permissão.' });
@@ -214,21 +220,44 @@ app.put('/api/estoque/:id', autenticar, async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────
-// ESTOQUE — Remover item
+// ESTOQUE — Remover item (e seu histórico de movimentações)
 // ─────────────────────────────────────────────────────────
 app.delete('/api/estoque/:id', autenticar, async (req, res) => {
   const itemId = parseInt(req.params.id);
+  const client = await pool.connect();
   try {
-    const result = await pool.query(
-      'DELETE FROM estoque_items WHERE id = $1 AND usuario_id = $2 RETURNING id',
+    await client.query('BEGIN');
+
+    // Confirma que o item existe e pertence ao usuário logado
+    const itemResult = await client.query(
+      'SELECT id FROM estoque_items WHERE id = $1 AND usuario_id = $2 FOR UPDATE',
       [itemId, req.usuario.id]
     );
-    if (result.rows.length === 0)
+    if (itemResult.rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({ erro: 'Item não encontrado ou sem permissão.' });
-    res.json({ mensagem: 'Item removido com sucesso.' });
+    }
+
+    // Remove o histórico de movimentações desse item primeiro
+    await client.query(
+      'DELETE FROM historico_movimentacoes WHERE item_id = $1 AND usuario_id = $2',
+      [itemId, req.usuario.id]
+    );
+
+    // Remove o item do estoque
+    await client.query(
+      'DELETE FROM estoque_items WHERE id = $1 AND usuario_id = $2',
+      [itemId, req.usuario.id]
+    );
+
+    await client.query('COMMIT');
+    res.json({ mensagem: 'Item e histórico removidos com sucesso.' });
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error('Erro ao remover item:', err);
     res.status(500).json({ erro: 'Erro ao remover item.' });
+  } finally {
+    client.release();
   }
 });
 
@@ -284,7 +313,15 @@ app.post('/api/estoque/:id/mover', autenticar, async (req, res) => {
 
     await client.query('COMMIT');
 
-    res.json({ id: item.id, nome: item.nome, atual: novoAtual, minimo: item.minimo, ideal: item.ideal });
+    res.json({
+      id: item.id,
+      nome: item.nome,
+      atual: novoAtual,
+      minimo: item.minimo,
+      ideal: item.ideal,
+      categoria: item.categoria,
+      unidade: item.unidade
+    });
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('Erro na movimentação:', err);
