@@ -169,7 +169,7 @@ app.post('/api/estoque', autenticar, async (req, res) => {
     return res.status(400).json({ erro: 'Estoque ideal deve ser maior ou igual ao mínimo.' });
 
   const categoriaFinal = (categoria && categoria.trim()) ? categoria.trim() : 'Sem categoria';
-  const unidadeFinal   = (unidade === 'pct') ? 'pct' : 'un';
+  const unidadeFinal   = (unidade && unidade.trim()) ? unidade.trim() : 'un';
 
   try {
     const result = await pool.query(
@@ -199,7 +199,7 @@ app.put('/api/estoque/:id', autenticar, async (req, res) => {
     return res.status(400).json({ erro: 'Estoque ideal deve ser maior ou igual ao mínimo.' });
 
   const categoriaFinal = (categoria && categoria.trim()) ? categoria.trim() : 'Sem categoria';
-  const unidadeFinal   = (unidade === 'pct') ? 'pct' : 'un';
+  const unidadeFinal   = (unidade && unidade.trim()) ? unidade.trim() : 'un';
 
   try {
     // WHERE usuario_id = $8 garante que o dono não edite item de outro usuário
