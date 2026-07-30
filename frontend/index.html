@@ -428,10 +428,10 @@
         </div>
         <div>
           <label>Unidade de medida</label>
-          <select id="f-unidade">
-            <option value="un">Unidade (un)</option>
-            <option value="pct">Pacote (pct)</option>
-          </select>
+          <div style="display: flex; gap: 8px;">
+            <select id="f-unidade" style="flex: 1;"></select>
+            <button type="button" class="btn-secondary" onclick="abrirModalUnidades()" style="padding: 0 14px;" title="Gerenciar Unidades">⚙️</button>
+          </div>
         </div>
         <div class="calc-preview">
           Comprar: <strong id="preview-comprar">0</strong> unidades
@@ -546,10 +546,28 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-unidades" onclick="fecharModalUnidades(event)">
+  <div class="modal-box" style="max-width: 450px;">
+    <div class="modal-title">Gerenciar Unidades</div>
+    <p class="modal-info" style="margin-bottom: 16px;">Adicione, edite ou remova as unidades de medida do seu sistema (ex: unidade, pacote, caixa, litro...).</p>
+    
+    <div style="display: flex; gap: 8px;">
+      <input type="text" id="nova-uni-nome" placeholder="Nova unidade..." onkeydown="if(event.key==='Enter') adicionarUnidade()" />
+      <button class="btn-primary" onclick="adicionarUnidade()">Adicionar</button>
+    </div>
+
+    <div class="cat-list" id="lista-unidades-modal"></div>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="document.getElementById('modal-unidades').style.display='none'" style="width: 100%;">Concluído</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-compras" onclick="fecharModalCompras(event)">
   <div class="modal-box" style="max-width: 650px; width: 100%;">
     <div class="modal-title">📋 Lista de Compras Automatizada</div>
-    <p class="modal-info">Estes são os materiais que precisam de reposição (estoque atual <strong>abaixo ou igual</strong> ao mínimo).</p>
+    <p class="modal-info">Estes são os materiais que precisam de reposição (quantidade a comprar maior que zero).</p>
     
     <div style="max-height: 280px; overflow-y: auto; margin: 16px 0; border: 1px solid var(--border); border-radius: 10px;">
       <table style="width: 100%; border-collapse: collapse;">
@@ -630,31 +648,10 @@
   let sortAsc = true;
 
   const LISTA_CAT_KEY  = 'versah_lista_categorias'; 
-  const ITEM_CAT_KEY   = 'versah_item_categorias';
-  const ITEM_UN_KEY    = 'versah_item_unidades';
+  const LISTA_UNI_KEY  = 'versah_lista_unidades';
   
   let listaCategoriasAtivas = [];
-
-  // ====== FUNÇÕES PARA FORÇAR SALVAMENTO LOCAL DE CATEGORIAS ======
-  // O backend não armazena categoria/unidade nativamente. Isso contorna o problema.
-  function salvarCamposLocais(id, cat, un) {
-    let savedCats = JSON.parse(localStorage.getItem(ITEM_CAT_KEY) || '{}');
-    let savedUns = JSON.parse(localStorage.getItem(ITEM_UN_KEY) || '{}');
-    savedCats[id] = cat;
-    savedUns[id] = un;
-    localStorage.setItem(ITEM_CAT_KEY, JSON.stringify(savedCats));
-    localStorage.setItem(ITEM_UN_KEY, JSON.stringify(savedUns));
-  }
-
-  function carregarCamposLocais() {
-    let savedCats = JSON.parse(localStorage.getItem(ITEM_CAT_KEY) || '{}');
-    let savedUns = JSON.parse(localStorage.getItem(ITEM_UN_KEY) || '{}');
-    items.forEach(i => {
-      if (savedCats[i.id]) i.categoria = savedCats[i.id];
-      if (savedUns[i.id]) i.unidade = savedUns[i.id];
-    });
-  }
-  // =================================================================
+  let listaUnidadesAtivas   = [];
 
   // Lógica das Abas
   function mudarAba(abaId) {
@@ -696,6 +693,128 @@
     }
   }
 
+  function carregarListaUnidades() {
+    const salvas = localStorage.getItem(LISTA_UNI_KEY);
+    if (!salvas) {
+      listaUnidadesAtivas = ['un', 'pct'];
+      salvarListaUnidades();
+    } else {
+      listaUnidadesAtivas = JSON.parse(salvas);
+    }
+    atualizarSelectUnidadeFormulario();
+  }
+
+  function salvarListaUnidades() {
+    localStorage.setItem(LISTA_UNI_KEY, JSON.stringify(listaUnidadesAtivas));
+    atualizarSelectUnidadeFormulario();
+    renderUnidadesModal();
+    render();
+  }
+
+  function atualizarSelectUnidadeFormulario() {
+    const select = document.getElementById('f-unidade');
+    const valorAtual = select.value;
+    select.innerHTML = listaUnidadesAtivas.map(u => `<option value="${esc(u)}">${esc(u)}</option>`).join('');
+    if (listaUnidadesAtivas.includes(valorAtual)) {
+      select.value = valorAtual;
+    } else if (listaUnidadesAtivas.length > 0) {
+      select.value = listaUnidadesAtivas[0];
+    }
+  }
+
+  function adicionarUnidade() {
+    const input = document.getElementById('nova-uni-nome');
+    const nome = input.value.trim();
+    if (!nome) return showErro('Digite o nome da unidade.');
+    if (listaUnidadesAtivas.some(u => u.toLowerCase() === nome.toLowerCase())) {
+      return showErro('Esta unidade já existe.');
+    }
+    listaUnidadesAtivas.push(nome);
+    input.value = '';
+    salvarListaUnidades();
+    showToast('Unidade adicionada!');
+  }
+
+  async function editarUnidade(nomeAntigo) {
+    if (nomeAntigo === 'un') return showErro('Não é possível editar a unidade padrão.');
+    const novoNome = prompt(`Renomear unidade "${nomeAntigo}" para:`, nomeAntigo);
+    if (!novoNome || novoNome.trim() === '' || novoNome === nomeAntigo) return;
+    const nomeFinal = novoNome.trim();
+    if (listaUnidadesAtivas.some(u => u.toLowerCase() === nomeFinal.toLowerCase())) {
+      return showErro('Já existe uma unidade com este nome.');
+    }
+    const index = listaUnidadesAtivas.indexOf(nomeAntigo);
+    if (index !== -1) listaUnidadesAtivas[index] = nomeFinal;
+
+    await renomearUnidadeEmItens(nomeAntigo, nomeFinal);
+
+    salvarListaUnidades();
+    showToast('Unidade renomeada.');
+  }
+
+  async function excluirUnidade(nomeUni) {
+    if (nomeUni === 'un') return showErro('Não é possível excluir a unidade padrão.');
+    if (!confirm(`Tem certeza que deseja excluir "${nomeUni}"?
+
+Os itens voltarão para "un".`)) return;
+    listaUnidadesAtivas = listaUnidadesAtivas.filter(u => u !== nomeUni);
+
+    await renomearUnidadeEmItens(nomeUni, 'un');
+
+    salvarListaUnidades();
+    showToast('Unidade excluída.');
+  }
+
+  // Atualiza no backend todos os itens que estavam com "nomeAntigo" para "nomeNovo",
+  // para manter a unidade sincronizada entre dispositivos (mesma ideia da categoria).
+  async function renomearUnidadeEmItens(nomeAntigo, nomeNovo) {
+    const afetados = items.filter(i => (i.unidade || 'un') === nomeAntigo);
+    for (const item of afetados) {
+      try {
+        const res = await fetch(`${API}/estoque/${item.id}`, {
+          method: 'PUT', headers: authHeaders(),
+          body: JSON.stringify({
+            nome: item.nome, minimo: item.minimo, atual: item.atual, ideal: item.ideal,
+            categoria: item.categoria || 'Sem categoria', unidade: nomeNovo
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          items = items.map(i => i.id === item.id ? data : i);
+        }
+      } catch {}
+    }
+  }
+
+  function abrirModalUnidades() {
+    document.getElementById('modal-unidades').style.display = 'flex';
+    document.getElementById('nova-uni-nome').focus();
+    renderUnidadesModal();
+  }
+
+  function fecharModalUnidades(e) {
+    if (e.target === document.getElementById('modal-unidades'))
+      document.getElementById('modal-unidades').style.display = 'none';
+  }
+
+  function renderUnidadesModal() {
+    const listDiv = document.getElementById('lista-unidades-modal');
+    listDiv.innerHTML = listaUnidadesAtivas.map(uni => {
+      const isPadrao = uni === 'un';
+      return `
+        <div class="cat-item">
+          <span>${esc(uni)}</span>
+          ${isPadrao ? '<span style="color:var(--muted);font-size:12px;">(Padrão)</span>' : `
+          <div class="cat-item-actions">
+            <button class="action-btn edit" title="Editar Nome" onclick="editarUnidade('${esc(uni).replace(/'/g, "\\'")}')">✏</button>
+            <button class="action-btn del" title="Excluir" onclick="excluirUnidade('${esc(uni).replace(/'/g, "\\'")}')">✕</button>
+          </div>
+          `}
+        </div>
+      `;
+    }).join('');
+  }
+
   function adicionarCategoria() {
     const input = document.getElementById('nova-cat-nome');
     const nome = input.value.trim();
@@ -706,7 +825,6 @@
     listaCategoriasAtivas.push(nome);
     input.value = '';
     salvarListaCategorias();
-    document.getElementById('f-categoria').value = nome; // Seleciona automaticamente
     showToast('Categoria adicionada!');
   }
 
@@ -730,7 +848,9 @@
 
   async function excluirCategoria(nomeCat) {
     if (nomeCat === 'Sem categoria') return showErro('Não é possível excluir a categoria padrão.');
-    if (!confirm(`Tem certeza que deseja excluir "${nomeCat}"?\n\nOs itens voltarão para "Sem categoria".`)) return;
+    if (!confirm(`Tem certeza que deseja excluir "${nomeCat}"?
+
+Os itens voltarão para "Sem categoria".`)) return;
     listaCategoriasAtivas = listaCategoriasAtivas.filter(c => c !== nomeCat);
 
     await renomearCategoriaEmItens(nomeCat, 'Sem categoria');
@@ -740,6 +860,9 @@
     showToast('Categoria excluída.');
   }
 
+  // Atualiza no backend todos os itens que estavam com "nomeAntigo" para "nomeNovo",
+  // garantindo que a mudança de categoria fique salva no servidor (e não só neste
+  // dispositivo), para que apareça igual no notebook e no celular.
   async function renomearCategoriaEmItens(nomeAntigo, nomeNovo) {
     const afetados = items.filter(i => (i.categoria || 'Sem categoria') === nomeAntigo);
     for (const item of afetados) {
@@ -753,11 +876,6 @@
         });
         if (res.ok) {
           const data = await res.json();
-          // Força a inserção da categoria e unidade no objeto e salva localmente
-          data.categoria = nomeNovo;
-          data.unidade = item.unidade || 'un';
-          salvarCamposLocais(data.id, data.categoria, data.unidade);
-          
           items = items.map(i => i.id === item.id ? data : i);
         }
       } catch {}
@@ -793,6 +911,8 @@
     }).join('');
   }
 
+  // Categoria e unidade agora vêm diretamente do item retornado pela API
+  // (persistidas no backend), evitando divergência entre dispositivos.
   function obterCategoriaItem(id) {
     const item = items.find(i => i.id === id);
     const cat = (item && item.categoria) ? item.categoria : 'Sem categoria';
@@ -801,17 +921,17 @@
 
   function obterUnidadeItem(id) {
     const item = items.find(i => i.id === id);
-    return (item && item.unidade) ? item.unidade : 'un';
+    const uni = (item && item.unidade) ? item.unidade : 'un';
+    return listaUnidadesAtivas.includes(uni) ? uni : 'un';
   }
 
   function rotuloUnidade(u) {
-    return u === 'pct' ? 'pct' : 'un';
+    return listaUnidadesAtivas.includes(u) ? u : 'un';
   }
 
   function abrirModalCompras() {
     const calculados = items.map(calcularItem);
-    // Somente itens onde a quantidade atual é MENOR OU IGUAL à mínima
-    const paraRepor = calculados.filter(i => i.precisaReposicao && i.quantidadeComprar > 0);
+    const paraRepor = calculados.filter(i => i.quantidadeComprar > 0);
     
     const tbody = document.getElementById('corpo-compras-modal');
     if (paraRepor.length === 0) {
@@ -837,11 +957,10 @@
 
   function exportarComprasPDF() {
     const calculados = items.map(calcularItem);
-    // Somente itens onde a quantidade atual é MENOR OU IGUAL à mínima
-    const paraRepor = calculados.filter(i => i.precisaReposicao && i.quantidadeComprar > 0);
+    const paraRepor = calculados.filter(i => i.quantidadeComprar > 0);
     if (paraRepor.length === 0) return showErro('Não há materiais para gerar o PDF.');
 
-    // Agrupar os itens por categoria
+    // 1. Agrupar os itens por categoria
     const itensPorCategoria = {};
     paraRepor.forEach(item => {
       const cat = item.categoria || 'Sem categoria';
@@ -996,6 +1115,7 @@
     document.getElementById('header-sub').textContent = `Logado como: ${usuario.nome} (${usuario.email})`;
 
     carregarListaCategorias();
+    carregarListaUnidades();
 
     let seg = 0;
     const loadTimer = setInterval(() => {
@@ -1015,25 +1135,7 @@
       const res = await fetch(`${API}/estoque`, { headers: authHeaders() });
       if (res.status === 401) return logout();
       if (!res.ok) return showErro('Erro ao carregar estoque. Tente recarregar a página.');
-      
       items = await res.json();
-
-      // Como o backend parece ignorar a coluna de categorias, nós as recuperamos localmente!
-      carregarCamposLocais();
-
-      let mudou = false;
-      items.forEach(item => {
-        if (item.categoria && !listaCategoriasAtivas.includes(item.categoria) && item.categoria !== 'Sem categoria') {
-          listaCategoriasAtivas.push(item.categoria);
-          mudou = true;
-        }
-      });
-      if (mudou) {
-        localStorage.setItem(LISTA_CAT_KEY, JSON.stringify(listaCategoriasAtivas));
-        atualizarSelectFormulario();
-        renderCategoriasModal();
-      }
-
       render();
     } catch {
       showErro('Não foi possível carregar o estoque. Verifique a conexão.');
@@ -1063,12 +1165,11 @@
 
     const quantidadeComprar = Math.max(0, idealNum - atualNum);
     
-    // Regra ajustada: entra em reposição se for MENOR OU IGUAL ao mínimo.
-    const precisaReposicao  = atualNum <= minimoNum; 
+    const precisaReposicao  = atualNum <= minimoNum;
     
     const percentual        = idealNum > 0 ? Math.min(100, Math.round((atualNum / idealNum) * 100)) : 0;
     const categoria = listaCategoriasAtivas.includes(item.categoria) ? item.categoria : 'Sem categoria';
-    const unidade = item.unidade || 'un';
+    const unidade = listaUnidadesAtivas.includes(item.unidade) ? item.unidade : 'un';
     
     const quantidadeComprarFixed = +quantidadeComprar.toFixed(3);
     
@@ -1228,7 +1329,8 @@
     ['f-nome','f-minimo','f-atual','f-ideal'].forEach(id => document.getElementById(id).value = '');
     const catSelect = document.getElementById('f-categoria');
     catSelect.value = listaCategoriasAtivas.includes('Sem categoria') ? 'Sem categoria' : listaCategoriasAtivas[0];
-    document.getElementById('f-unidade').value = 'un';
+    const uniSelect = document.getElementById('f-unidade');
+    uniSelect.value = listaUnidadesAtivas.includes('un') ? 'un' : listaUnidadesAtivas[0];
     document.getElementById('preview-comprar').textContent = '0';
     document.getElementById('form-panel').classList.add('visible');
     setTimeout(() => document.getElementById('f-nome').focus(), 100);
@@ -1292,11 +1394,6 @@
       }
       const data = await res.json();
       if (!res.ok) return showErro(data.erro || 'Erro ao salvar.');
-
-      // Se o backend jogar a categoria/unidade fora, forçamos no objeto e salvamos no LocalStorage
-      data.categoria = categoria;
-      data.unidade = unidade;
-      salvarCamposLocais(data.id, categoria, unidade);
 
       if (editandoId !== null) {
         items = items.map(i => i.id === editandoId ? data : i);
@@ -1371,11 +1468,6 @@
       });
       const data = await res.json();
       if (!res.ok) return showErro(data.erro || 'Erro na movimentação.');
-
-      // Preserva as informações locais que possam ter vindo vazias
-      data.categoria = items.find(i => i.id === movId)?.categoria || 'Sem categoria';
-      data.unidade = items.find(i => i.id === movId)?.unidade || 'un';
-
       items = items.map(i => i.id === movId ? data : i);
       document.getElementById('modal-mov').style.display = 'none';
       render();
