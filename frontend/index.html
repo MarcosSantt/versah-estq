@@ -19,6 +19,7 @@
       --primary:   #2C2A26;
       --bright:    #1A1815;
       --accent:    #C3A365;
+      --accent-hover: #b39355;
       --green:     #22c55e;
       --red:       #ef4444;
       --yellow:    #f59e0b;
@@ -34,315 +35,300 @@
       padding-bottom: 60px;
     }
 
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--subtle); }
 
+    /* ── Header Flutuante ── */
+    .header-wrapper { padding: 24px 24px 0; max-width: 1200px; margin: 0 auto; }
     #header {
-      background: #6A6658;
-      border-bottom: 3px solid var(--accent);
-      padding: 20px 40px;
-      display: flex; align-items: center;
-      justify-content: space-between;
-      position: sticky; top: 0; z-index: 100;
+      background: var(--primary);
+      border-radius: 20px;
+      padding: 20px 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 12px 32px rgba(44, 42, 38, 0.15);
       flex-wrap: wrap; gap: 16px;
+      position: relative; overflow: hidden;
     }
-    .header-logo { display: flex; align-items: center; gap: 12px; }
-    .header-title { font-weight: 600; font-size: 20px; color: #fff; letter-spacing: -0.01em; }
-    .header-sub { font-size: 12px; color: #E2DDD3; margin-top: 2px; padding-left: 48px; }
-    .header-user { font-size: 13px; color: #E2DDD3; }
-    .header-actions { display: flex; align-items: center; gap: 12px; }
+    #header::before {
+      content: ''; position: absolute; top: -50px; left: -50px; width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(195,163,101,0.15) 0%, transparent 70%); border-radius: 50%;
+    }
+    .header-logo { display: flex; align-items: center; gap: 14px; position: relative; z-index: 2; }
+    .header-logo-icon {
+      display: flex; align-items: center; justify-content: center;
+      width: 44px; height: 44px; background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;
+    }
+    .header-title { font-weight: 600; font-size: 22px; color: var(--surface); letter-spacing: -0.02em; }
+    .header-sub { font-size: 13px; color: var(--muted); margin-top: 4px; padding-left: 58px; font-weight: 500; position: relative; z-index: 2; }
+    
+    .header-actions { display: flex; align-items: center; gap: 12px; position: relative; z-index: 2; }
     .btn-logout {
-      display: inline-flex; align-items: center; justify-content: center;
-      padding: 10px 18px; border-radius: 10px;
-      border: 1px solid var(--border); color: #fff;
-      font-size: 13px; font-weight: 600;
-      background: transparent; cursor: pointer;
-      font-family: var(--sans); white-space: nowrap;
-      transition: background 0.15s;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 10px 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); 
+      color: var(--surface); font-size: 14px; font-weight: 600;
+      background: rgba(255,255,255,0.05); cursor: pointer; font-family: var(--sans);
+      transition: all 0.2s ease;
     }
-    .btn-logout:hover { background: rgba(255,255,255,0.1); }
+    .btn-logout:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.2); }
 
-    #app { max-width: 1100px; margin: 0 auto; padding: 32px 24px 0; }
+    /* ── Container Principal ── */
+    #app { max-width: 1200px; margin: 0 auto; padding: 32px 24px 0; }
 
+    /* ── KPIs (Cards) ── */
     #kpi-grid {
       display: grid; grid-template-columns: repeat(3, 1fr);
-      gap: 16px; margin-bottom: 28px;
+      gap: 20px; margin-bottom: 32px;
     }
     .kpi-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 14px; padding: 20px 24px;
-      display: flex; align-items: center; gap: 16px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.02);
-      transition: transform 0.2s, box-shadow 0.2s;
+      background: var(--surface); border: 1px solid rgba(255,255,255,0.5);
+      border-radius: 20px; padding: 24px;
+      display: flex; align-items: center; gap: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.02);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .kpi-card.alerta { border-color: #ef444444; box-shadow: 0 0 20px #ef444415; }
-
+    .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.08); }
+    .kpi-card.alerta { border: 1px solid #fecaca; background: #fffcfc; }
+    .kpi-card.alerta:hover { box-shadow: 0 16px 40px rgba(239, 68, 68, 0.12); }
     #kpi-alerta { cursor: pointer; }
-    #kpi-alerta:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(239, 68, 68, 0.2); }
 
     .kpi-icon {
-      width: 48px; height: 48px; border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 24px; flex-shrink: 0;
+      width: 56px; height: 56px; border-radius: 16px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
-    .kpi-value { font-family: var(--mono); font-size: 28px; font-weight: 700; color: var(--bright); }
-    .kpi-label { font-size: 12px; color: var(--subtle); margin-top: 2px; }
+    .kpi-icon svg { width: 26px; height: 26px; }
+    
+    .kpi-value { font-family: var(--mono); font-size: 32px; font-weight: 600; color: var(--bright); letter-spacing: -0.02em; line-height: 1.1; }
+    .kpi-label { font-size: 13px; color: var(--subtle); margin-top: 6px; font-weight: 500; }
 
-    /* ESTILOS DAS ABAS */
+    /* ── Abas ── */
     .tabs-wrapper {
-      display: flex; gap: 24px; margin-bottom: 24px;
-      border-bottom: 1px solid var(--border);
+      display: inline-flex; background: #F8F7F4; border-radius: 12px;
+      padding: 6px; margin-bottom: 24px; gap: 4px; border: 1px solid var(--border);
     }
     .tab-btn {
-      background: transparent; border: none; padding: 12px 4px;
-      font-family: var(--sans); font-size: 15px; font-weight: 600;
-      color: var(--subtle); cursor: pointer;
-      border-bottom: 3px solid transparent; margin-bottom: -1px;
-      transition: all 0.2s;
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 20px; border: none; background: transparent;
+      border-radius: 8px; font-size: 14px; font-weight: 600;
+      color: var(--dim); cursor: pointer; transition: all 0.3s ease;
+      font-family: var(--sans);
     }
-    .tab-btn:hover { color: var(--primary); }
-    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-btn svg { width: 18px; height: 18px; }
+    .tab-btn:hover:not(.active) { color: var(--primary); }
+    .tab-btn.active { background: var(--surface); color: var(--bright); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
     
     .aba-content { display: none; }
-    .aba-content.active { display: block; animation: fadein 0.3s ease; }
+    .aba-content.active { display: block; animation: fadein 0.4s ease; }
 
-    button { cursor: pointer; transition: filter 0.15s, transform 0.1s; font-family: var(--sans); }
-    button:hover { filter: brightness(1.1); transform: translateY(-1px); }
-    button:active { transform: translateY(0); }
-
+    /* ── Botões Globais ── */
+    button { cursor: pointer; font-family: var(--sans); transition: all 0.2s ease; outline: none; }
     .btn-primary {
-      display: inline-flex; align-items: center; justify-content: center;
-      padding: 10px 20px; border-radius: 10px; border: none; color: #fff;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px 24px; border-radius: 12px; border: none; color: #fff;
       font-size: 14px; font-weight: 600; background: var(--accent); white-space: nowrap;
+      box-shadow: 0 4px 14px rgba(195, 163, 101, 0.25);
     }
+    .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(195, 163, 101, 0.35); }
+    .btn-primary:active { transform: translateY(0); box-shadow: 0 2px 8px rgba(195, 163, 101, 0.25); }
+    
     .btn-secondary {
-      display: inline-flex; align-items: center; justify-content: center;
-      padding: 10px 20px; border-radius: 10px; border: 1px solid var(--border);
-      color: var(--secondary); font-size: 14px; font-weight: 600; background: var(--surface);
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px 20px; border-radius: 12px; border: 1px solid var(--border);
+      color: var(--dim); font-size: 14px; font-weight: 600; background: var(--surface);
     }
+    .btn-secondary:hover { border-color: var(--muted); color: var(--primary); background: #FCFBF9; }
 
+    /* ── Painel de Formulário ── */
     #form-panel {
       background: var(--surface); border: 1px solid var(--border);
-      border-top: 3px solid var(--accent); border-radius: 16px;
-      padding: 28px; margin-bottom: 24px; display: none;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+      border-radius: 24px; padding: 32px; margin-bottom: 32px; display: none;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.06); position: relative; overflow: hidden;
     }
-    #form-panel.visible { display: block; }
-    #form-panel h3 { font-family: var(--mono); font-size: 16px; color: var(--bright); margin-bottom: 24px; }
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; }
+    #form-panel::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--accent); }
+    #form-panel.visible { display: block; animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+    #form-panel h3 { font-family: var(--sans); font-size: 18px; color: var(--bright); margin-bottom: 24px; display: flex; align-items: center; gap: 8px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     .form-grid .full { grid-column: 1 / -1; }
-    label {
-      display: block; margin-bottom: 6px; font-size: 11px;
-      color: var(--dim); font-family: var(--mono);
-      letter-spacing: 0.07em; text-transform: uppercase;
-    }
+    
+    label { display: block; margin-bottom: 8px; font-size: 12px; color: var(--dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    
     input[type=text], input[type=number], select#f-categoria, select#f-unidade {
-      width: 100%; padding: 12px 14px; background: var(--surface);
-      border: 1px solid var(--border); border-radius: 10px;
-      color: var(--primary); font-size: 16px; font-family: var(--sans);
-      transition: border-color 0.15s, box-shadow 0.15s;
+      width: 100%; padding: 14px 16px; background: #FCFBF9;
+      border: 1.5px solid var(--border); border-radius: 12px;
+      color: var(--primary); font-size: 15px; font-family: var(--sans);
+      transition: all 0.2s ease;
     }
     input::placeholder { color: var(--muted); }
-    input:focus, select#f-categoria:focus, select#f-unidade:focus {
-      outline: none; border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(195, 163, 101, 0.2);
-    }
+    input:focus, select:focus { outline: none; background: var(--surface); border-color: var(--accent); box-shadow: 0 0 0 4px rgba(195, 163, 101, 0.15); }
+    
+    .btn-icon-only { padding: 0 16px; height: 100%; display: inline-flex; align-items: center; }
+    .btn-icon-only svg { width: 18px; height: 18px; }
+
     .calc-preview {
-      background: var(--bg); border-radius: 10px; padding: 10px 14px;
-      font-size: 13px; color: var(--secondary);
-      display: flex; align-items: center; height: 46px; margin-top: 22px;
+      background: #F8F7F4; border: 1px solid var(--border); border-radius: 12px; 
+      padding: 0 20px; font-size: 14px; color: var(--secondary);
+      display: flex; align-items: center; height: 50px; margin-top: 24px; font-weight: 500;
     }
-    .calc-preview strong { color: var(--accent); font-size: 16px; margin: 0 4px; }
-    .form-actions { display: flex; gap: 12px; margin-top: 24px; }
+    .calc-preview strong { color: var(--accent); font-size: 18px; font-weight: 700; margin: 0 6px; font-family: var(--mono); }
+    .form-actions { display: flex; gap: 12px; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--bg); }
 
-    #filtros { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 0; }
-    #filtros span { color: var(--subtle); font-size: 13px; margin-right: 4px; }
-    .filtro-btn {
-      padding: 6px 14px; border-radius: 99px; font-size: 12px; font-weight: 600;
-      border: 1px solid var(--border); background: var(--surface); color: var(--secondary);
-      cursor: pointer; transition: all 0.2s;
-    }
-    .filtro-btn.ativo-todos  { background: var(--primary); color: #fff; border-color: var(--primary); }
-    .filtro-btn.ativo-alerta { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
-    .filtro-btn.ativo-categoria { background: #eef2f7; color: #1e3a5f; border-color: #b7c6dc; }
-
+    /* ── Wrap Tabela e Filtros ── */
     #tabela-wrap {
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px; overflow: hidden;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+      border-radius: 24px; overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.04);
     }
-    .tabela-scroll {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
+    .tabela-header { padding: 24px 32px 20px; border-bottom: 1px solid var(--border); }
+    .tabela-header-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
+    .tabela-header-bottom { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
     
-    .tabela-header {
-      padding: 20px 28px 16px;
-      border-bottom: 1px solid var(--border);
+    .tabela-title { font-family: var(--sans); font-size: 18px; font-weight: 600; color: var(--bright); display: flex; align-items: center; gap: 10px; }
+    
+    #filtros { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 0; }
+    #filtros span { color: var(--subtle); font-size: 13px; font-weight: 500; margin-right: 8px; }
+    .filtro-btn {
+      padding: 8px 16px; border-radius: 99px; font-size: 13px; font-weight: 600;
+      border: 1.5px solid var(--border); background: var(--surface); color: var(--dim);
+      transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;
     }
-    .tabela-header-top {
-      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
-      margin-bottom: 16px;
-    }
-    .tabela-header-bottom {
-      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
-    }
-    .search-wrap { 
-      flex: 1; display: flex; justify-content: flex-end; min-width: 200px; 
-    }
-    .search-input {
-      width: 100%; max-width: 300px; padding: 10px 16px; border-radius: 99px;
-      border: 1px solid var(--border); background: var(--bg);
-      font-family: var(--sans); font-size: 13px; color: var(--primary);
-      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .search-input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(195, 163, 101, 0.2);
-    }
+    .filtro-btn:hover { border-color: var(--muted); color: var(--primary); }
+    .filtro-btn.ativo-todos  { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .filtro-btn.ativo-alerta { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+    .filtro-btn.ativo-categoria { background: #F8F7F4; color: var(--accent); border-color: var(--accent); }
 
-    .tabela-title { font-family: var(--mono); font-size: 14px; color: var(--dim); letter-spacing: 0.05em; }
-    table { width: 100%; border-collapse: collapse; }
+    .search-wrap { flex: 1; display: flex; justify-content: flex-end; min-width: 250px; position: relative; }
+    .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--muted); width: 16px; height: 16px; pointer-events: none;}
+    .search-wrap .search-input { width: 100%; max-width: 320px; padding-left: 40px; }
 
+    /* ── Tabela ── */
+    .tabela-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    
     thead th {
-      padding: 14px 16px; text-align: left;
-      font-family: var(--mono); font-size: 11px; color: var(--muted);
-      letter-spacing: 0.08em; text-transform: uppercase;
-      background: var(--bg); border-bottom: 1px solid var(--border);
+      padding: 16px 24px; text-align: left;
+      font-family: var(--sans); font-size: 12px; font-weight: 600; color: var(--subtle);
+      letter-spacing: 0.05em; text-transform: uppercase;
+      background: #FCFBF9; border-bottom: 1.5px solid var(--border);
     }
     .th-sortable { cursor: pointer; user-select: none; transition: color 0.2s; }
     .th-sortable:hover { color: var(--primary); }
-    .sort-icon { font-size: 10px; margin-left: 4px; color: var(--accent); }
+    .sort-icon { font-size: 10px; margin-left: 6px; color: var(--accent); }
 
-    tbody td { padding: 16px; border-bottom: 1px solid var(--bg); vertical-align: middle; }
+    tbody td { padding: 18px 24px; border-bottom: 1px solid var(--bg); vertical-align: middle; transition: background 0.2s; }
     tbody tr:last-child td { border-bottom: none; }
-    tbody tr:hover { background: #fafaf8; }
-    tbody tr.alerta-row { background: #fff9f9; }
-    tbody tr.alerta-row:hover { background: #fff0f0; }
+    tbody tr:hover td { background: #FCFBF9; }
+    tbody tr.alerta-row td { background: #fffcfc; }
+    tbody tr.alerta-row:hover td { background: #fff5f5; }
 
-    .cell-nome { font-weight: 600; display: flex; align-items: center; gap: 8px; }
-    .dot { color: var(--red); font-size: 8px; }
-    .cell-mono { font-family: var(--mono); font-size: 14px; color: var(--secondary); }
-    .cell-atual { font-family: var(--mono); font-size: 18px; font-weight: 700; color: var(--bright); }
+    .cell-nome { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 12px; color: var(--bright); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); display: inline-block; box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
+    .cell-mono { font-family: var(--mono); font-size: 15px; color: var(--secondary); font-weight: 500;}
+    .cell-atual { font-family: var(--mono); font-size: 20px; font-weight: 600; color: var(--bright); }
     .cell-atual.alerta { color: var(--red); }
-    .cell-comprar { font-family: var(--mono); font-size: 16px; font-weight: 700; }
+    .cell-comprar { font-family: var(--mono); font-size: 16px; font-weight: 600; display: inline-flex; align-items: baseline; gap: 4px;}
     .cell-comprar.need { color: var(--accent); }
     .cell-comprar.ok   { color: var(--muted); }
 
-    .progress-wrap { margin-top: 6px; background: var(--border); border-radius: 99px; height: 4px; width: 80px; overflow: hidden; }
-    .progress-bar  { height: 100%; border-radius: 99px; transition: width 0.4s; }
+    .progress-wrap { margin-top: 8px; background: var(--border); border-radius: 99px; height: 6px; width: 90px; overflow: hidden; }
+    .progress-bar  { height: 100%; border-radius: 99px; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
 
     .badge {
-      display: inline-flex; align-items: center;
-      padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 600;
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: 99px; font-size: 12px; font-weight: 600;
     }
-    .badge.ok   { background: #dcfce7; color: #15803d; }
-    .badge.repor { background: #fee2e2; color: #b91c1c; }
-    .badge.categoria-badge { background: #eef2f7; color: #1e3a5f; }
+    .badge svg { width: 14px; height: 14px; }
+    .badge.ok   { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+    .badge.repor { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .badge.categoria-badge { background: #F8F7F4; color: var(--dim); border: 1px solid var(--border); }
 
-    .action-wrap { display: flex; gap: 6px; }
+    .action-wrap { display: flex; gap: 8px; }
     .action-btn {
-      width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border);
-      background: var(--surface); font-size: 12px; font-weight: 700; color: var(--secondary);
-      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 10px; border: 1.5px solid var(--border);
+      background: var(--surface); color: var(--subtle);
+      display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;
     }
-    .action-btn.entrada:hover { background: #dcfce7; color: #15803d; border-color: #86efac; }
-    .action-btn.saida:hover   { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
-    .action-btn.edit:hover    { background: #fef9ec; color: var(--accent); border-color: var(--accent); }
-    .action-btn.del:hover     { background: #fee2e2; color: var(--red); border-color: #fca5a5; }
+    .action-btn svg { width: 16px; height: 16px; }
+    .action-btn.entrada:hover { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; transform: translateY(-2px); }
+    .action-btn.saida:hover   { background: #fef2f2; color: #b91c1c; border-color: #fecaca; transform: translateY(-2px); }
+    .action-btn.edit:hover    { background: #F8F7F4; color: var(--accent); border-color: var(--accent); transform: translateY(-2px); }
+    .action-btn.del:hover     { background: #fef2f2; color: var(--red); border-color: #fecaca; transform: translateY(-2px); }
 
-    .empty-state { text-align: center; color: var(--muted); padding: 48px 16px; font-size: 14px; }
+    .empty-state { text-align: center; color: var(--subtle); padding: 64px 20px; font-size: 15px; font-weight: 500; }
 
-    /* Painel Histórico remodelado para nova aba */
+    /* ── Painel Histórico ── */
     #historico-panel {
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px; padding: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+      border-radius: 24px; padding: 32px; box-shadow: 0 12px 40px rgba(0,0,0,0.04);
     }
-    #historico-panel h3 { font-family: var(--mono); font-size: 14px; color: var(--dim); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px;}
-    .hist-item {
-      display: flex; align-items: center; gap: 12px; padding: 12px 0;
-      border-bottom: 1px solid var(--bg); flex-wrap: wrap;
-    }
+    #historico-panel h3 { font-family: var(--sans); font-size: 18px; color: var(--bright); margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+    .hist-item { display: flex; align-items: center; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--bg); flex-wrap: wrap; }
     .hist-item:last-child { border-bottom: none; }
-    .hist-badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; }
-    .hist-badge.entrada { background: #dcfce7; color: #15803d; }
-    .hist-badge.saida   { background: #fee2e2; color: #b91c1c; }
-    .hist-nome { font-weight: 600; font-size: 14px; flex: 1; min-width: 150px; color: var(--bright); }
-    .hist-qtd  { font-family: var(--mono); font-size: 14px; color: var(--secondary); font-weight: bold; }
-    .hist-obs  { font-size: 13px; color: var(--subtle); font-style: italic; }
-    .hist-hora { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-left: auto; }
+    .hist-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; }
+    .hist-badge svg { width: 14px; height: 14px; }
+    .hist-badge.entrada { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+    .hist-badge.saida   { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .hist-nome { font-weight: 600; font-size: 15px; flex: 1; min-width: 180px; color: var(--bright); }
+    .hist-qtd  { font-family: var(--mono); font-size: 16px; color: var(--primary); font-weight: 600; }
+    .hist-obs  { font-size: 13px; color: var(--subtle); font-style: italic; background: #F8F7F4; padding: 4px 10px; border-radius: 6px;}
+    .hist-hora { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-left: auto; }
 
+    /* ── Modais Globais ── */
     .modal-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
-      z-index: 200; align-items: center; justify-content: center; padding: 20px;
+      display: none; position: fixed; inset: 0; background: rgba(26, 24, 21, 0.6); backdrop-filter: blur(8px);
+      z-index: 200; align-items: center; justify-content: center; padding: 24px;
     }
     .modal-box {
-      background: var(--surface); border-radius: 20px;
-      padding: 32px; max-width: 420px; width: 100%;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      background: var(--surface); border-radius: 24px; padding: 40px; max-width: 460px; width: 100%;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.2);
+      animation: zoomIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .modal-title { font-family: var(--mono); font-size: 18px; color: var(--bright); margin-bottom: 8px; }
-    .modal-info  { font-size: 14px; color: var(--secondary); margin-bottom: 20px; }
-    .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
+    @keyframes zoomIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    
+    .modal-title { font-family: var(--sans); font-size: 22px; font-weight: 600; color: var(--bright); margin-bottom: 12px; display: flex; align-items: center; gap: 10px;}
+    .modal-info  { font-size: 14px; color: var(--dim); margin-bottom: 24px; line-height: 1.5; }
+    .modal-actions { display: flex; gap: 12px; margin-top: 32px; }
 
-    .cat-list { margin-top: 16px; max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; }
-    .cat-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--bg); font-size: 14px; }
+    .cat-list { margin-top: 20px; max-height: 240px; overflow-y: auto; border: 1.5px solid var(--border); border-radius: 12px; }
+    .cat-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--bg); font-size: 14px; font-weight: 500; }
     .cat-item:last-child { border-bottom: none; }
     .cat-item-actions { display: flex; gap: 6px; }
 
-    .relatorio-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .relatorio-table td { padding: 10px 14px; border-bottom: 1px solid var(--bg); }
-    .relatorio-table tr:last-child td { border-bottom: none; }
-
-    #loading-overlay {
-      position: fixed; inset: 0; background: var(--bg);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 999; flex-direction: column; gap: 16px;
-    }
-    .page-spinner {
-      width: 36px; height: 36px;
-      border: 3px solid var(--border); border-top-color: var(--accent);
-      border-radius: 50%; animation: spin 0.8s linear infinite;
-    }
+    /* ── Loading & Toast ── */
+    #loading-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 999; flex-direction: column; gap: 20px; }
+    .page-spinner { width: 44px; height: 44px; border: 3px solid rgba(195, 163, 101, 0.3); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-text { font-family: var(--mono); font-size: 13px; color: var(--subtle); }
+    .loading-text { font-family: var(--sans); font-weight: 500; font-size: 14px; color: var(--dim); }
 
     .toast {
-      position: fixed; bottom: 24px; right: 24px;
-      background: var(--bright); color: #fff;
-      padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 600;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-      display: flex; align-items: center; gap: 8px; z-index: 9999;
-      transform: translateY(80px); opacity: 0;
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: fixed; bottom: 32px; right: 32px; background: var(--bright); color: #fff;
+      padding: 14px 24px; border-radius: 12px; font-size: 14px; font-weight: 500;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px; z-index: 9999;
+      transform: translateY(100px); opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
     .toast.show { transform: translateY(0); opacity: 1; }
-    .toast.sucesso { border-left: 3px solid var(--green); }
-    .toast.erro    { border-left: 3px solid var(--red); }
+    .toast.sucesso { border-left: 4px solid var(--green); }
+    .toast.erro    { border-left: 4px solid var(--red); }
 
-    @keyframes fadein { from { opacity: 0; transform: translateX(-50%) translateY(-8px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+    @keyframes fadein { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    @media (max-width: 700px) {
+    /* ── Responsividade ── */
+    @media (max-width: 860px) {
+      .header-wrapper { padding: 16px 16px 0; }
+      #header { padding: 16px 20px; border-radius: 16px; }
       #kpi-grid { grid-template-columns: 1fr; }
-      #header { padding: 16px 20px; }
-      #app { padding: 20px 16px 0; }
-      .tabela-header-top { flex-direction: column; align-items: flex-start; }
-      .tabela-header-bottom { flex-direction: column; align-items: flex-start; gap: 12px; }
-      .search-wrap { justify-content: flex-start; width: 100%; }
-      .search-input { max-width: 100%; width: 100%; }
+      #app { padding: 24px 16px 0; }
+      .tabela-header-top, .tabela-header-bottom { flex-direction: column; align-items: flex-start; }
+      .search-wrap { width: 100%; justify-content: flex-start; }
+      .search-wrap .search-input { max-width: 100%; }
       .form-grid { grid-template-columns: 1fr; }
       .form-grid .full { grid-column: 1; }
-      table { font-size: 13px; min-width: 640px; }
-      thead th, tbody td { padding: 10px 12px; }
-      .action-wrap { flex-wrap: wrap; }
-      .modal-box { padding: 24px 20px; }
-      .grid-relatorio { grid-template-columns: 1fr !important; }
-    }
-    @media (min-width: 701px) and (max-width: 1024px) {
-      #kpi-grid { grid-template-columns: repeat(2, 1fr); }
-      #app { padding: 28px 20px 0; }
+      table { min-width: 800px; }
+      .modal-box { padding: 32px 24px; }
     }
   </style>
 </head>
@@ -350,43 +336,56 @@
 
 <div id="loading-overlay">
   <div class="page-spinner"></div>
-  <div class="loading-text" id="loading-text">Carregando estoque...</div>
+  <div class="loading-text" id="loading-text">Conectando ao servidor seguro...</div>
 </div>
 
-<div id="header">
-  <div>
-    <div class="header-logo">
-      <svg width="36" height="36" viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 0C5.373 0 0 5.373 0 12C0 15.9 1.87 19.37 4.77 21.6L12 36L19.23 21.6C22.13 19.37 24 15.9 24 12C24 5.373 18.627 0 12 0Z" fill="#C3A365"/>
-        <circle cx="12" cy="12" r="5" fill="#fff"/>
-      </svg>
-      <span class="header-title">Versah · EstoqueControl</span>
+<div class="header-wrapper">
+  <div id="header">
+    <div>
+      <div class="header-logo">
+        <div class="header-logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 0C5.373 0 0 5.373 0 12C0 15.9 1.87 19.37 4.77 21.6L12 36L19.23 21.6C22.13 19.37 24 15.9 24 12C24 5.373 18.627 0 12 0Z" fill="#C3A365"/>
+            <circle cx="12" cy="12" r="5" fill="#fff"/>
+          </svg>
+        </div>
+        <span class="header-title">Versah Estoque</span>
+      </div>
+      <div class="header-sub" id="header-sub">Carregando dados do usuário...</div>
     </div>
-    <div class="header-sub" id="header-sub">Carregando...</div>
-  </div>
-  <div class="header-actions">
-    <button class="btn-logout" id="btn-sair">Sair</button>
+    <div class="header-actions">
+      <button class="btn-logout" id="btn-sair">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sair do sistema
+      </button>
+    </div>
   </div>
 </div>
 
 <div id="app">
   <div id="kpi-grid">
     <div class="kpi-card">
-      <div class="kpi-icon" style="background:#F4F3EF">📦</div>
+      <div class="kpi-icon" style="background:#F8F7F4; color: var(--dim);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      </div>
       <div>
         <div class="kpi-value" id="kpi-total-val">—</div>
         <div class="kpi-label">Itens cadastrados</div>
       </div>
     </div>
     <div class="kpi-card" id="kpi-alerta" onclick="setFiltro('alerta')" title="Filtrar itens em reposição">
-      <div class="kpi-icon" style="background:#fee2e2">⚠️</div>
+      <div class="kpi-icon" style="background:#fef2f2; color: #dc2626;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
       <div>
         <div class="kpi-value" id="kpi-alerta-val">—</div>
         <div class="kpi-label">Itens para Repor</div>
       </div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-icon" style="background:#fef9ec">🛒</div>
+      <div class="kpi-icon" style="background:rgba(195,163,101,0.15); color: var(--accent);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      </div>
       <div>
         <div class="kpi-value" id="kpi-comprar-val">—</div>
         <div class="kpi-label">Volume de compras</div>
@@ -395,13 +394,19 @@
   </div>
 
   <div class="tabs-wrapper">
-    <button id="tab-btn-estoque" class="tab-btn active" onclick="mudarAba('estoque')">📦 Meu Estoque</button>
-    <button id="tab-btn-historico" class="tab-btn" onclick="mudarAba('historico')">⟳ Histórico de Movimentações</button>
+    <button id="tab-btn-estoque" class="tab-btn active" onclick="mudarAba('estoque')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      Meu Estoque
+    </button>
+    <button id="tab-btn-historico" class="tab-btn" onclick="mudarAba('historico')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+      Histórico de Movimentações
+    </button>
   </div>
 
   <div id="aba-estoque" class="aba-content active">
     <div id="form-panel">
-      <h3 id="form-title">+ Novo Material</h3>
+      <h3 id="form-title">Novo Material</h3>
       <div class="form-grid">
         <div class="full">
           <label>Nome do material</label>
@@ -423,22 +428,26 @@
           <label>Categoria</label>
           <div style="display: flex; gap: 8px;">
             <select id="f-categoria" style="flex: 1;"></select>
-            <button type="button" class="btn-secondary" onclick="abrirModalCategorias()" style="padding: 0 14px;" title="Gerenciar Categorias">⚙️</button>
+            <button type="button" class="btn-secondary btn-icon-only" onclick="abrirModalCategorias()" title="Gerenciar Categorias">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
           </div>
         </div>
         <div>
           <label>Unidade de medida</label>
           <div style="display: flex; gap: 8px;">
             <select id="f-unidade" style="flex: 1;"></select>
-            <button type="button" class="btn-secondary" onclick="abrirModalUnidades()" style="padding: 0 14px;" title="Gerenciar Unidades">⚙️</button>
+            <button type="button" class="btn-secondary btn-icon-only" onclick="abrirModalUnidades()" title="Gerenciar Unidades">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
           </div>
         </div>
         <div class="calc-preview">
-          Comprar: <strong id="preview-comprar">0</strong> unidades
+          Comprar: <strong id="preview-comprar">0</strong> unidades para atingir o ideal
         </div>
       </div>
       <div class="form-actions">
-        <button class="btn-primary" onclick="salvarItem()">Salvar</button>
+        <button class="btn-primary" onclick="salvarItem()">Salvar Material</button>
         <button class="btn-secondary" onclick="fecharForm()">Cancelar</button>
       </div>
     </div>
@@ -446,22 +455,38 @@
     <div id="tabela-wrap">
       <div class="tabela-header">
         <div class="tabela-header-top">
-          <div class="tabela-title">MATERIAIS E INSUMOS</div>
-          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-            <button class="btn-secondary" onclick="abrirModalRelatorio()">📊 Relatório</button>
-            <button class="btn-secondary" onclick="abrirModalCompras()">📋 Lista de Compras</button>
-            <button class="btn-primary" onclick="abrirFormNovo()">+ Novo item</button>
+          <div class="tabela-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            Materiais e Insumos
+          </div>
+          <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+            <button class="btn-secondary" onclick="abrirModalRelatorio()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              Relatório
+            </button>
+            <button class="btn-secondary" onclick="abrirModalCompras()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              Lista de Compras
+            </button>
+            <button class="btn-primary" onclick="abrirFormNovo()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Novo Item
+            </button>
           </div>
         </div>
         <div class="tabela-header-bottom">
           <div id="filtros">
             <span>Filtrar:</span>
             <button id="btn-filtro-todos"  class="filtro-btn ativo-todos" onclick="setFiltro('todos')">Todos</button>
-            <button id="btn-filtro-alerta" class="filtro-btn" onclick="setFiltro('alerta')">⚠ Reposição</button>
+            <button id="btn-filtro-alerta" class="filtro-btn" onclick="setFiltro('alerta')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Reposição
+            </button>
             <span id="filtros-categorias" style="display:contents"></span>
           </div>
           <div class="search-wrap">
-            <input type="text" id="busca-material" class="search-input" placeholder="🔍 Buscar material..." oninput="setBusca(this.value)" />
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="busca-material" class="search-input" placeholder="Buscar material..." oninput="setBusca(this.value)" />
           </div>
         </div>
       </div>
@@ -473,7 +498,7 @@
               <th class="th-sortable" onclick="organizarPor('minimo')">Mínimo <span id="sort-minimo" class="sort-icon"></span></th>
               <th class="th-sortable" onclick="organizarPor('atual')">Atual <span id="sort-atual" class="sort-icon"></span></th>
               <th class="th-sortable" onclick="organizarPor('ideal')">Ideal <span id="sort-ideal" class="sort-icon"></span></th>
-              <th class="th-sortable" onclick="organizarPor('comprar')">A comprar <span id="sort-comprar" class="sort-icon"></span></th>
+              <th class="th-sortable" onclick="organizarPor('comprar')">A Comprar <span id="sort-comprar" class="sort-icon"></span></th>
               <th class="th-sortable" onclick="organizarPor('status')">Status <span id="sort-status" class="sort-icon"></span></th>
               <th class="th-sortable" onclick="organizarPor('categoria')">Categoria <span id="sort-categoria" class="sort-icon"></span></th>
               <th>Ações</th>
@@ -496,12 +521,16 @@
 
 </div>
 
+<!-- ── MODAIS ── -->
 <div class="modal-overlay" id="modal-delete" onclick="fecharModalDelete(event)">
   <div class="modal-box">
-    <div class="modal-title">Remover item</div>
-    <p class="modal-info">Tem certeza que deseja remover <strong id="delete-nome-item"></strong>? Esta ação não pode ser desfeita.</p>
+    <div class="modal-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" width="24" height="24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      Remover item
+    </div>
+    <p class="modal-info">Tem certeza que deseja remover <strong id="delete-nome-item" style="color:var(--bright)"></strong>? Esta ação apagará permanentemente o material.</p>
     <div class="modal-actions">
-      <button class="btn-primary" style="background:var(--red)" onclick="confirmarDelete()">Remover</button>
+      <button class="btn-primary" style="background:var(--red); box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25);" onclick="confirmarDelete()">Sim, remover</button>
       <button class="btn-secondary" onclick="document.getElementById('modal-delete').style.display='none'">Cancelar</button>
     </div>
   </div>
@@ -510,16 +539,14 @@
 <div class="modal-overlay" id="modal-mov" onclick="fecharModalMov(event)">
   <div class="modal-box" id="modal-mov-box">
     <div class="modal-title" id="modal-mov-titulo"></div>
-    <p class="modal-info" id="modal-mov-info"></p>
-    <div>
-      <label>Quantidade</label>
-      <input type="number" id="modal-mov-qtd" min="0" step="any" placeholder="0"
-             onkeydown="if(event.key==='Enter') confirmarMov()" style="margin-bottom:12px"/>
+    <p class="modal-info" id="modal-mov-info" style="font-size: 16px;"></p>
+    <div class="form-group" style="margin-bottom: 20px;">
+      <label>Quantidade da movimentação</label>
+      <input type="number" id="modal-mov-qtd" min="0" step="any" placeholder="0" onkeydown="if(event.key==='Enter') confirmarMov()" />
     </div>
-    <div>
+    <div class="form-group">
       <label>Observação (opcional)</label>
-      <input type="text" id="modal-mov-obs" placeholder="Ex: Recebimento NF 1234"
-             onkeydown="if(event.key==='Enter') confirmarMov()" />
+      <input type="text" id="modal-mov-obs" placeholder="Ex: Recebimento NF 1234, Uso paciente X" onkeydown="if(event.key==='Enter') confirmarMov()" />
     </div>
     <div class="modal-actions">
       <button class="btn-primary" id="modal-mov-btn" onclick="confirmarMov()">Confirmar</button>
@@ -529,17 +556,15 @@
 </div>
 
 <div class="modal-overlay" id="modal-categorias" onclick="fecharModalCategorias(event)">
-  <div class="modal-box" style="max-width: 450px;">
+  <div class="modal-box" style="max-width: 480px;">
     <div class="modal-title">Gerenciar Categorias</div>
-    <p class="modal-info" style="margin-bottom: 16px;">Adicione, edite ou remova categorias do seu sistema.</p>
+    <p class="modal-info">Adicione, edite ou remova categorias de organização do seu sistema.</p>
     
-    <div style="display: flex; gap: 8px;">
+    <div style="display: flex; gap: 12px; margin-bottom: 24px;">
       <input type="text" id="nova-cat-nome" placeholder="Nova categoria..." onkeydown="if(event.key==='Enter') adicionarCategoria()" />
       <button class="btn-primary" onclick="adicionarCategoria()">Adicionar</button>
     </div>
-
     <div class="cat-list" id="lista-categorias-modal"></div>
-
     <div class="modal-actions">
       <button class="btn-secondary" onclick="document.getElementById('modal-categorias').style.display='none'" style="width: 100%;">Concluído</button>
     </div>
@@ -547,17 +572,15 @@
 </div>
 
 <div class="modal-overlay" id="modal-unidades" onclick="fecharModalUnidades(event)">
-  <div class="modal-box" style="max-width: 450px;">
+  <div class="modal-box" style="max-width: 480px;">
     <div class="modal-title">Gerenciar Unidades</div>
-    <p class="modal-info" style="margin-bottom: 16px;">Adicione, edite ou remova as unidades de medida do seu sistema (ex: unidade, pacote, caixa, litro...).</p>
+    <p class="modal-info">Configure as unidades de medida (ex: unidade, pacote, litro).</p>
     
-    <div style="display: flex; gap: 8px;">
+    <div style="display: flex; gap: 12px; margin-bottom: 24px;">
       <input type="text" id="nova-uni-nome" placeholder="Nova unidade..." onkeydown="if(event.key==='Enter') adicionarUnidade()" />
       <button class="btn-primary" onclick="adicionarUnidade()">Adicionar</button>
     </div>
-
     <div class="cat-list" id="lista-unidades-modal"></div>
-
     <div class="modal-actions">
       <button class="btn-secondary" onclick="document.getElementById('modal-unidades').style.display='none'" style="width: 100%;">Concluído</button>
     </div>
@@ -565,73 +588,81 @@
 </div>
 
 <div class="modal-overlay" id="modal-compras" onclick="fecharModalCompras(event)">
-  <div class="modal-box" style="max-width: 650px; width: 100%;">
-    <div class="modal-title">📋 Lista de Compras Automatizada</div>
-    <p class="modal-info">Estes são os materiais que precisam de reposição (quantidade a comprar maior que zero).</p>
+  <div class="modal-box" style="max-width: 700px; width: 100%;">
+    <div class="modal-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Lista de Compras Automatizada
+    </div>
+    <p class="modal-info">Materiais que precisam ser comprados para atingir o estoque ideal.</p>
     
-    <div style="max-height: 280px; overflow-y: auto; margin: 16px 0; border: 1px solid var(--border); border-radius: 10px;">
+    <div style="max-height: 320px; overflow-y: auto; margin: 24px 0; border: 1.5px solid var(--border); border-radius: 12px;">
       <table style="width: 100%; border-collapse: collapse;">
         <thead>
-          <tr style="background: var(--bg); font-family: var(--mono); font-size: 11px; text-transform: uppercase;">
-            <th style="padding: 10px 14px; text-align: left;">Material</th>
-            <th style="padding: 10px 14px; text-align: left;">Categoria</th>
-            <th style="padding: 10px 14px; text-align: center;">Atual</th>
-            <th style="padding: 10px 14px; text-align: center;">Ideal</th>
-            <th style="padding: 10px 14px; text-align: center; color: var(--accent);">Falta</th>
+          <tr style="background: #FCFBF9; font-family: var(--sans); font-size: 11px; text-transform: uppercase; color: var(--subtle); letter-spacing: 0.05em;">
+            <th style="padding: 14px 20px; text-align: left; border-bottom: 1px solid var(--border);">Material</th>
+            <th style="padding: 14px 20px; text-align: left; border-bottom: 1px solid var(--border);">Categoria</th>
+            <th style="padding: 14px 20px; text-align: center; border-bottom: 1px solid var(--border);">Atual</th>
+            <th style="padding: 14px 20px; text-align: center; border-bottom: 1px solid var(--border);">Ideal</th>
+            <th style="padding: 14px 20px; text-align: center; color: var(--accent); border-bottom: 1px solid var(--border);">Falta</th>
           </tr>
         </thead>
         <tbody id="corpo-compras-modal"></tbody>
       </table>
     </div>
 
-    <div style="display: flex; justify-content: center; margin-top: 16px;">
-      <button class="btn-secondary" onclick="exportarComprasPDF()" style="padding: 12px 24px; font-size: 14px;">📄 Exportar Documento PDF</button>
+    <div style="display: flex; justify-content: center; margin-top: 24px;">
+      <button class="btn-primary" onclick="exportarComprasPDF()" style="padding: 14px 32px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Baixar Relatório em PDF
+      </button>
     </div>
-
-    <div class="modal-actions" style="margin-top: 24px;">
-      <button class="btn-primary" onclick="document.getElementById('modal-compras').style.display='none'" style="width: 100%;">Fechar Janela</button>
+    <div class="modal-actions" style="margin-top: 32px; border-top: 1px solid var(--bg); padding-top: 24px;">
+      <button class="btn-secondary" onclick="document.getElementById('modal-compras').style.display='none'" style="width: 100%;">Fechar Janela</button>
     </div>
   </div>
 </div>
 
 <div class="modal-overlay" id="modal-relatorio" onclick="fecharModalRelatorio(event)">
-  <div class="modal-box" style="max-width: 800px; width: 100%;">
-    <div class="modal-title">📊 Relatório Detalhado de Consumo</div>
-    <p class="modal-info">Acompanhe as entradas, saídas e o saldo de movimentações por período.</p>
+  <div class="modal-box" style="max-width: 850px; width: 100%;">
+    <div class="modal-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Relatório Detalhado de Consumo
+    </div>
+    <p class="modal-info">Acompanhe as entradas, saídas e o saldo final de cada produto por período.</p>
     
-    <div style="margin-bottom: 20px;">
-      <label>Período de Análise:</label>
-      <select id="filtro-dias-relatorio" onchange="renderRelatorio(parseInt(this.value))" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-family: var(--sans);">
+    <div class="form-group" style="margin-bottom: 24px; max-width: 300px;">
+      <label>Período de Análise</label>
+      <select id="filtro-dias-relatorio" onchange="renderRelatorio(parseInt(this.value))">
         <option value="15">Últimos 15 dias</option>
         <option value="30">Últimos 30 dias</option>
-        <option value="0">Todo o histórico disponível</option>
+        <option value="0">Todo o histórico</option>
       </select>
     </div>
 
-    <div style="border: 1px solid var(--border); border-radius: 8px; max-height: 350px; overflow-y: auto;">
-      <table class="relatorio-table" style="width: 100%; border-collapse: collapse; font-size: 13px;">
-        <thead style="position: sticky; top: 0; background: var(--bg); border-bottom: 1px solid var(--border);">
+    <div style="border: 1.5px solid var(--border); border-radius: 12px; max-height: 400px; overflow-y: auto;">
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead style="position: sticky; top: 0; background: #FCFBF9; border-bottom: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
           <tr>
-            <th style="padding: 10px 14px; text-align: left; font-family: var(--mono); font-size: 11px; text-transform: uppercase;">Material</th>
-            <th style="padding: 10px 14px; text-align: left; font-family: var(--mono); font-size: 11px; text-transform: uppercase;">Categoria</th>
-            <th style="padding: 10px 14px; text-align: center; font-family: var(--mono); font-size: 11px; color: var(--green); text-transform: uppercase;">Entradas</th>
-            <th style="padding: 10px 14px; text-align: center; font-family: var(--mono); font-size: 11px; color: var(--red); text-transform: uppercase;">Saídas</th>
-            <th style="padding: 10px 14px; text-align: center; font-family: var(--mono); font-size: 11px; text-transform: uppercase;">Variação (Saldo)</th>
-            <th style="padding: 10px 14px; text-align: center; font-family: var(--mono); font-size: 11px; text-transform: uppercase;">Estoque Atual</th>
+            <th style="padding: 14px 20px; text-align: left; font-family: var(--sans); font-size: 11px; text-transform: uppercase; color: var(--subtle); border-bottom: 1.5px solid var(--border);">Material</th>
+            <th style="padding: 14px 20px; text-align: left; font-family: var(--sans); font-size: 11px; text-transform: uppercase; color: var(--subtle); border-bottom: 1.5px solid var(--border);">Categoria</th>
+            <th style="padding: 14px 20px; text-align: center; font-family: var(--sans); font-size: 11px; text-transform: uppercase; color: var(--green); border-bottom: 1.5px solid var(--border);">Entradas</th>
+            <th style="padding: 14px 20px; text-align: center; font-family: var(--sans); font-size: 11px; text-transform: uppercase; color: var(--red); border-bottom: 1.5px solid var(--border);">Saídas</th>
+            <th style="padding: 14px 20px; text-align: center; font-family: var(--sans); font-size: 11px; text-transform: uppercase; color: var(--dim); border-bottom: 1.5px solid var(--border);">Saldo Periodo</th>
+            <th style="padding: 14px 20px; text-align: center; font-family: var(--sans); font-size: 11px; text-transform: uppercase; color: var(--bright); border-bottom: 1.5px solid var(--border);">Estoque Atual</th>
           </tr>
         </thead>
         <tbody id="corpo-relatorio-tabela"></tbody>
       </table>
     </div>
-
-    <div class="modal-actions" style="margin-top: 24px;">
-      <button class="btn-primary" onclick="document.getElementById('modal-relatorio').style.display='none'" style="width: 100%;">Fechar Relatório</button>
+    <div class="modal-actions" style="margin-top: 32px; border-top: 1px solid var(--bg); padding-top: 24px;">
+      <button class="btn-secondary" onclick="document.getElementById('modal-relatorio').style.display='none'" style="width: 100%;">Fechar Relatório</button>
     </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
+<!-- LÓGICA DE BACKEND ORIGINAL (Mantida perfeitamente intacta, apenas templates SVG ajustados) -->
 <script>
   const API = 'https://versah-backend.onrender.com/api';
 
@@ -652,6 +683,14 @@
   
   let listaCategoriasAtivas = [];
   let listaUnidadesAtivas   = [];
+
+  // Constantes de Ícones SVG
+  const iconEdit = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+  const iconDel  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+  const iconUp   = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>';
+  const iconDown = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>';
+  const iconWarn = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+  const iconCheck= '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
 
   // Lógica das Abas
   function mudarAba(abaId) {
@@ -754,9 +793,7 @@
 
   async function excluirUnidade(nomeUni) {
     if (nomeUni === 'un') return showErro('Não é possível excluir a unidade padrão.');
-    if (!confirm(`Tem certeza que deseja excluir "${nomeUni}"?
-
-Os itens voltarão para "un".`)) return;
+    if (!confirm(`Tem certeza que deseja excluir "${nomeUni}"?\n\nOs itens voltarão para "un".`)) return;
     listaUnidadesAtivas = listaUnidadesAtivas.filter(u => u !== nomeUni);
 
     await renomearUnidadeEmItens(nomeUni, 'un');
@@ -765,8 +802,6 @@ Os itens voltarão para "un".`)) return;
     showToast('Unidade excluída.');
   }
 
-  // Atualiza no backend todos os itens que estavam com "nomeAntigo" para "nomeNovo",
-  // para manter a unidade sincronizada entre dispositivos (mesma ideia da categoria).
   async function renomearUnidadeEmItens(nomeAntigo, nomeNovo) {
     const afetados = items.filter(i => (i.unidade || 'un') === nomeAntigo);
     for (const item of afetados) {
@@ -806,8 +841,8 @@ Os itens voltarão para "un".`)) return;
           <span>${esc(uni)}</span>
           ${isPadrao ? '<span style="color:var(--muted);font-size:12px;">(Padrão)</span>' : `
           <div class="cat-item-actions">
-            <button class="action-btn edit" title="Editar Nome" onclick="editarUnidade('${esc(uni).replace(/'/g, "\\'")}')">✏</button>
-            <button class="action-btn del" title="Excluir" onclick="excluirUnidade('${esc(uni).replace(/'/g, "\\'")}')">✕</button>
+            <button class="action-btn edit" title="Editar Nome" onclick="editarUnidade('${esc(uni).replace(/'/g, "\\'")}')">${iconEdit}</button>
+            <button class="action-btn del" title="Excluir" onclick="excluirUnidade('${esc(uni).replace(/'/g, "\\'")}')">${iconDel}</button>
           </div>
           `}
         </div>
@@ -848,9 +883,7 @@ Os itens voltarão para "un".`)) return;
 
   async function excluirCategoria(nomeCat) {
     if (nomeCat === 'Sem categoria') return showErro('Não é possível excluir a categoria padrão.');
-    if (!confirm(`Tem certeza que deseja excluir "${nomeCat}"?
-
-Os itens voltarão para "Sem categoria".`)) return;
+    if (!confirm(`Tem certeza que deseja excluir "${nomeCat}"?\n\nOs itens voltarão para "Sem categoria".`)) return;
     listaCategoriasAtivas = listaCategoriasAtivas.filter(c => c !== nomeCat);
 
     await renomearCategoriaEmItens(nomeCat, 'Sem categoria');
@@ -860,9 +893,6 @@ Os itens voltarão para "Sem categoria".`)) return;
     showToast('Categoria excluída.');
   }
 
-  // Atualiza no backend todos os itens que estavam com "nomeAntigo" para "nomeNovo",
-  // garantindo que a mudança de categoria fique salva no servidor (e não só neste
-  // dispositivo), para que apareça igual no notebook e no celular.
   async function renomearCategoriaEmItens(nomeAntigo, nomeNovo) {
     const afetados = items.filter(i => (i.categoria || 'Sem categoria') === nomeAntigo);
     for (const item of afetados) {
@@ -902,8 +932,8 @@ Os itens voltarão para "Sem categoria".`)) return;
           <span>${esc(cat)}</span>
           ${isPadrao ? '<span style="color:var(--muted);font-size:12px;">(Padrão)</span>' : `
           <div class="cat-item-actions">
-            <button class="action-btn edit" title="Editar Nome" onclick="editarCategoria('${esc(cat).replace(/'/g, "\\'")}')">✏</button>
-            <button class="action-btn del" title="Excluir" onclick="excluirCategoria('${esc(cat).replace(/'/g, "\\'")}')">✕</button>
+            <button class="action-btn edit" title="Editar Nome" onclick="editarCategoria('${esc(cat).replace(/'/g, "\\'")}')">${iconEdit}</button>
+            <button class="action-btn del" title="Excluir" onclick="excluirCategoria('${esc(cat).replace(/'/g, "\\'")}')">${iconDel}</button>
           </div>
           `}
         </div>
@@ -911,8 +941,6 @@ Os itens voltarão para "Sem categoria".`)) return;
     }).join('');
   }
 
-  // Categoria e unidade agora vêm diretamente do item retornado pela API
-  // (persistidas no backend), evitando divergência entre dispositivos.
   function obterCategoriaItem(id) {
     const item = items.find(i => i.id === id);
     const cat = (item && item.categoria) ? item.categoria : 'Sem categoria';
@@ -935,15 +963,15 @@ Os itens voltarão para "Sem categoria".`)) return;
     
     const tbody = document.getElementById('corpo-compras-modal');
     if (paraRepor.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="padding: 32px;">🎉 Excelente! Nenhum item precisa ser comprado no momento.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="padding: 48px;">🎉 Excelente! Nenhum item precisa ser comprado no momento.</td></tr>`;
     } else {
       tbody.innerHTML = paraRepor.map(i => `
         <tr style="border-bottom: 1px solid var(--bg);">
-          <td style="padding: 12px 14px; font-weight: 600;">${esc(i.nome)}</td>
-          <td style="padding: 12px 14px;"><span class="badge categoria-badge">${esc(i.categoria)}</span></td>
-          <td style="padding: 12px 14px; text-align: center; font-family: var(--mono);">${i.atual}</td>
-          <td style="padding: 12px 14px; text-align: center; font-family: var(--mono);">${i.ideal}</td>
-          <td style="padding: 12px 14px; text-align: center; font-family: var(--mono); font-weight: 700; color: var(--accent);">${i.quantidadeComprar} ${esc(rotuloUnidade(i.unidade))}</td>
+          <td style="padding: 16px 20px; font-weight: 600; color: var(--bright);">${esc(i.nome)}</td>
+          <td style="padding: 16px 20px;"><span class="badge categoria-badge">${esc(i.categoria)}</span></td>
+          <td style="padding: 16px 20px; text-align: center; font-family: var(--mono); color: var(--secondary);">${i.atual}</td>
+          <td style="padding: 16px 20px; text-align: center; font-family: var(--mono); color: var(--secondary);">${i.ideal}</td>
+          <td style="padding: 16px 20px; text-align: center; font-family: var(--mono); font-weight: 700; color: var(--accent); font-size: 15px;">${i.quantidadeComprar} ${esc(rotuloUnidade(i.unidade))}</td>
         </tr>
       `).join('');
     }
@@ -960,7 +988,6 @@ Os itens voltarão para "Sem categoria".`)) return;
     const paraRepor = calculados.filter(i => i.quantidadeComprar > 0);
     if (paraRepor.length === 0) return showErro('Não há materiais para gerar o PDF.');
 
-    // 1. Agrupar os itens por categoria
     const itensPorCategoria = {};
     paraRepor.forEach(item => {
       const cat = item.categoria || 'Sem categoria';
@@ -991,7 +1018,7 @@ Os itens voltarão para "Sem categoria".`)) return;
       </head>
       <body>
         <div class="marca">Versah · EstoqueControl</div>
-        <h1>📋 Lista de Compras Automatizada</h1>
+        <h1>Lista de Compras Automatizada</h1>
         <p>Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p>
         
         ${Object.keys(itensPorCategoria).sort().map(categoria => `
@@ -1046,11 +1073,7 @@ Os itens voltarão para "Sem categoria".`)) return;
     let reportData = {};
     items.forEach(i => {
       reportData[i.nome] = {
-        nome: i.nome,
-        categoria: obterCategoriaItem(i.id),
-        atual: i.atual,
-        entradas: 0,
-        saidas: 0
+        nome: i.nome, categoria: obterCategoriaItem(i.id), atual: i.atual, entradas: 0, saidas: 0
       };
     });
 
@@ -1066,29 +1089,28 @@ Os itens voltarão para "Sem categoria".`)) return;
     });
 
     let ativos = Object.values(reportData).filter(i => i.entradas > 0 || i.saidas > 0);
-    
     ativos.sort((a, b) => (b.entradas + b.saidas) - (a.entradas + a.saidas));
 
     const tbody = document.getElementById('corpo-relatorio-tabela');
     
     if(ativos.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="empty-state" style="padding:20px;">Nenhuma movimentação registrada neste período.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state" style="padding:48px;">Nenhuma movimentação registrada neste período.</td></tr>';
     } else {
       tbody.innerHTML = ativos.map(i => {
         const saldo = +(i.entradas - i.saidas).toFixed(3);
-        let corSaldo = 'var(--subtle)';
+        let corSaldo = 'var(--dim)';
         let sinalSaldo = '';
         if (saldo > 0) { corSaldo = 'var(--green)'; sinalSaldo = '+'; }
         if (saldo < 0) { corSaldo = 'var(--red)'; }
 
         return `
           <tr style="border-bottom: 1px solid var(--bg);">
-            <td style="padding: 12px 14px; font-weight: 600;">${esc(i.nome)}</td>
-            <td style="padding: 12px 14px;"><span class="badge categoria-badge">${esc(i.categoria)}</span></td>
-            <td style="padding: 12px 14px; text-align: center; color: var(--green); font-weight: bold; font-family: var(--mono);">${i.entradas > 0 ? '+' + (+i.entradas.toFixed(3)) : '-'}</td>
-            <td style="padding: 12px 14px; text-align: center; color: var(--red); font-weight: bold; font-family: var(--mono);">${i.saidas > 0 ? '-' + (+i.saidas.toFixed(3)) : '-'}</td>
-            <td style="padding: 12px 14px; text-align: center; color: ${corSaldo}; font-weight: bold; font-family: var(--mono);">${sinalSaldo}${saldo}</td>
-            <td style="padding: 12px 14px; text-align: center; font-family: var(--mono); font-weight: 700;">${i.atual}</td>
+            <td style="padding: 16px 20px; font-weight: 600; color: var(--bright);">${esc(i.nome)}</td>
+            <td style="padding: 16px 20px;"><span class="badge categoria-badge">${esc(i.categoria)}</span></td>
+            <td style="padding: 16px 20px; text-align: center; color: var(--green); font-weight: 600; font-family: var(--mono);">${i.entradas > 0 ? '+' + (+i.entradas.toFixed(3)) : '-'}</td>
+            <td style="padding: 16px 20px; text-align: center; color: var(--red); font-weight: 600; font-family: var(--mono);">${i.saidas > 0 ? '-' + (+i.saidas.toFixed(3)) : '-'}</td>
+            <td style="padding: 16px 20px; text-align: center; color: ${corSaldo}; font-weight: 700; font-family: var(--mono);">${sinalSaldo}${saldo}</td>
+            <td style="padding: 16px 20px; text-align: center; font-family: var(--mono); font-weight: 700; color: var(--secondary);">${i.atual}</td>
           </tr>
         `;
       }).join('');
@@ -1097,10 +1119,7 @@ Os itens voltarão para "Sem categoria".`)) return;
 
   function authHeaders() {
     const token = localStorage.getItem('versah_token');
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    };
+    return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
   }
 
   async function inicializar() {
@@ -1112,7 +1131,7 @@ Os itens voltarão para "Sem categoria".`)) return;
       return;
     }
 
-    document.getElementById('header-sub').textContent = `Logado como: ${usuario.nome} (${usuario.email})`;
+    document.getElementById('header-sub').textContent = `Logado como: ${usuario.nome}`;
 
     carregarListaCategorias();
     carregarListaUnidades();
@@ -1158,19 +1177,16 @@ Os itens voltarão para "Sem categoria".`)) return;
   }
   document.getElementById('btn-sair').addEventListener('click', logout);
 
- function calcularItem(item) {
+  function calcularItem(item) {
     const atualNum  = parseFloat(item.atual) || 0;
     const minimoNum = parseFloat(item.minimo) || 0;
     const idealNum  = parseFloat(item.ideal) || 0;
 
     const quantidadeComprar = Math.max(0, idealNum - atualNum);
-    
     const precisaReposicao  = atualNum <= minimoNum;
-    
     const percentual        = idealNum > 0 ? Math.min(100, Math.round((atualNum / idealNum) * 100)) : 0;
     const categoria = listaCategoriasAtivas.includes(item.categoria) ? item.categoria : 'Sem categoria';
     const unidade = listaUnidadesAtivas.includes(item.unidade) ? item.unidade : 'un';
-    
     const quantidadeComprarFixed = +quantidadeComprar.toFixed(3);
     
     return { 
@@ -1204,11 +1220,10 @@ Os itens voltarão para "Sem categoria".`)) return;
 
     document.getElementById('kpi-total-val').textContent   = calculados.length;
     document.getElementById('kpi-alerta-val').textContent  = totalAlerta;
-    
     document.getElementById('kpi-comprar-val').textContent = +totalComprar.toFixed(3);
     
     document.getElementById('kpi-alerta').classList.toggle('alerta', totalAlerta > 0);
-    document.getElementById('btn-filtro-alerta').textContent = `⚠ Reposição (${totalAlerta})`;
+    document.getElementById('btn-filtro-alerta').innerHTML = `${iconWarn} Reposição (${totalAlerta})`;
 
     const categoriasPresentes = [...new Set(calculados.map(i => i.categoria))].sort((a, b) => a.localeCompare(b));
     const wrapCategorias = document.getElementById('filtros-categorias');
@@ -1259,25 +1274,25 @@ Os itens voltarão para "Sem categoria".`)) return;
     }
 
     tbody.innerHTML = filtrados.map(item => {
-      const corBarra = item.precisaReposicao ? '#ef4444' : item.percentual < 50 ? '#f59e0b' : '#22c55e';
+      const corBarra = item.precisaReposicao ? 'var(--red)' : item.percentual < 50 ? 'var(--yellow)' : 'var(--green)';
       return `
         <tr class="${item.precisaReposicao ? 'alerta-row' : ''}">
           <td class="cell-nome">
-            ${item.precisaReposicao ? '<span class="dot">●</span>' : ''}
+            ${item.precisaReposicao ? '<span class="dot"></span>' : ''}
             ${esc(item.nome)}
           </td>
           <td class="cell-mono">${item.minimo}</td>
           <td>
             <span class="cell-atual ${item.precisaReposicao ? 'alerta' : ''}">${item.atual}</span>
             <div class="progress-wrap">
-              <div class="progress-bar" style="width:${item.percentual}%;background:${corBarra};box-shadow:0 0 8px ${corBarra}88"></div>
+              <div class="progress-bar" style="width:${item.percentual}%;background:${corBarra};"></div>
             </div>
           </td>
           <td class="cell-mono">${item.ideal}</td>
-          <td class="cell-comprar ${item.quantidadeComprar > 0 ? 'need' : 'ok'}">${item.quantidadeComprar} <span style="font-size:11px;font-weight:400;color:var(--subtle)">${esc(rotuloUnidade(item.unidade))}</span></td>
+          <td class="cell-comprar ${item.quantidadeComprar > 0 ? 'need' : 'ok'}">${item.quantidadeComprar} <span style="font-size:12px;font-weight:500;color:var(--subtle)">${esc(rotuloUnidade(item.unidade))}</span></td>
           <td>
             <span class="badge ${item.precisaReposicao ? 'repor' : 'ok'}">
-              ${item.precisaReposicao ? '⚠ Repor' : '✓ OK'}
+              ${item.precisaReposicao ? iconWarn + ' Repor' : iconCheck + ' OK'}
             </span>
           </td>
           <td>
@@ -1285,10 +1300,10 @@ Os itens voltarão para "Sem categoria".`)) return;
           </td>
           <td>
             <div class="action-wrap">
-              <button class="action-btn entrada" title="Entrada" onclick="abrirMov(${item.id},'ENTRADA')">▲</button>
-              <button class="action-btn saida"   title="Saída"   onclick="abrirMov(${item.id},'SAÍDA')">▼</button>
-              <button class="action-btn edit"    title="Editar"  onclick="abrirFormEditar(${item.id})">✏</button>
-              <button class="action-btn del"     title="Remover" onclick="pedirDelete(${item.id})">✕</button>
+              <button class="action-btn entrada" title="Registrar Entrada" onclick="abrirMov(${item.id},'ENTRADA')">${iconUp}</button>
+              <button class="action-btn saida"   title="Registrar Saída" onclick="abrirMov(${item.id},'SAÍDA')">${iconDown}</button>
+              <button class="action-btn edit"    title="Editar Material" onclick="abrirFormEditar(${item.id})">${iconEdit}</button>
+              <button class="action-btn del"     title="Remover Material" onclick="pedirDelete(${item.id})">${iconDel}</button>
             </div>
           </td>
         </tr>`;
@@ -1305,11 +1320,12 @@ Os itens voltarão para "Sem categoria".`)) return;
     lista.innerHTML = historico.map(h => {
       const hora = new Date(h.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
       const tipoCSS = h.tipo === 'ENTRADA' ? 'entrada' : 'saida';
+      const icon = h.tipo === 'ENTRADA' ? iconUp : iconDown;
       return `
         <div class="hist-item">
-          <span class="hist-badge ${tipoCSS}">${h.tipo === 'ENTRADA' ? '▲' : '▼'} ${h.tipo}</span>
+          <span class="hist-badge ${tipoCSS}">${icon} ${h.tipo}</span>
           <span class="hist-nome">${esc(h.item_nome)}</span>
-          <span class="hist-qtd">${h.tipo === 'ENTRADA' ? '+' : '-'}${+parseFloat(h.quantidade).toFixed(3)} un.</span>
+          <span class="hist-qtd" style="color: ${h.tipo==='ENTRADA'?'var(--green)':'var(--red)'}">${h.tipo === 'ENTRADA' ? '+' : '-'}${+parseFloat(h.quantidade).toFixed(3)} un.</span>
           ${h.observacao ? `<span class="hist-obs">${esc(h.observacao)}</span>` : ''}
           <span class="hist-hora">${hora}</span>
         </div>`;
@@ -1325,7 +1341,7 @@ Os itens voltarão para "Sem categoria".`)) return;
 
   function abrirFormNovo() {
     editandoId = null;
-    document.getElementById('form-title').textContent = '+ Novo Material';
+    document.getElementById('form-title').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Novo Material';
     ['f-nome','f-minimo','f-atual','f-ideal'].forEach(id => document.getElementById(id).value = '');
     const catSelect = document.getElementById('f-categoria');
     catSelect.value = listaCategoriasAtivas.includes('Sem categoria') ? 'Sem categoria' : listaCategoriasAtivas[0];
@@ -1340,7 +1356,7 @@ Os itens voltarão para "Sem categoria".`)) return;
     const item = items.find(i => i.id === id);
     if (!item) return;
     editandoId = id;
-    document.getElementById('form-title').textContent = '✏ Editar Material';
+    document.getElementById('form-title').innerHTML = `${iconEdit} Editar Material`;
     document.getElementById('f-nome').value   = item.nome;
     document.getElementById('f-minimo').value = item.minimo;
     document.getElementById('f-atual').value  = item.atual;
@@ -1376,8 +1392,8 @@ Os itens voltarão para "Sem categoria".`)) return;
     const unidade = document.getElementById('f-unidade').value || 'un';
 
     if (!nome) return showErro('Informe o nome do material.');
-    if ([minimo, atual, ideal].some(v => isNaN(v) || v < 0)) return showErro('Preencha todos os campos com valores numéricos válidos (≥ 0).');
-    if (ideal < minimo) return showErro('Estoque ideal deve ser ≥ ao mínimo.');
+    if ([minimo, atual, ideal].some(v => isNaN(v) || v < 0)) return showErro('Preencha todos os campos numéricos corretamente.');
+    if (ideal < minimo) return showErro('O estoque ideal não pode ser menor que o mínimo.');
 
     try {
       let res;
@@ -1402,9 +1418,9 @@ Os itens voltarão para "Sem categoria".`)) return;
       }
       fecharForm();
       render();
-      showToast(editandoId !== null ? '✓ Item atualizado.' : '✓ Item adicionado.');
+      showToast(editandoId !== null ? 'Material atualizado com sucesso.' : 'Material adicionado com sucesso.');
     } catch {
-      showErro('Não foi possível salvar. Verifique a conexão.');
+      showErro('Erro de conexão. Verifique sua internet.');
     }
   }
 
@@ -1429,7 +1445,7 @@ Os itens voltarão para "Sem categoria".`)) return;
       document.getElementById('modal-delete').style.display = 'none';
       render();
       renderHistorico();
-      showToast('✓ Item removido.');
+      showToast('Material removido.');
     } catch {
       showErro('Erro ao remover. Verifique a conexão.');
     }
@@ -1446,11 +1462,16 @@ Os itens voltarão para "Sem categoria".`)) return;
     movId   = id;
     movTipo = tipo;
     const isEntrada = tipo === 'ENTRADA';
-    document.getElementById('modal-mov-titulo').textContent = isEntrada ? '▲ Registrar Entrada' : '▼ Registrar Saída';
+    
+    document.getElementById('modal-mov-titulo').innerHTML = isEntrada ? `${iconUp} Registrar Entrada` : `${iconDown} Registrar Saída`;
     document.getElementById('modal-mov-titulo').style.color = isEntrada ? 'var(--green)' : 'var(--red)';
-    document.getElementById('modal-mov-box').style.borderTop = `3px solid ${isEntrada ? 'var(--green)' : 'var(--red)'}`;
-    document.getElementById('modal-mov-info').innerHTML = `${esc(item.nome)} — Atual: <strong style="color:var(--secondary)">${item.atual}</strong>`;
-    document.getElementById('modal-mov-btn').style.background = isEntrada ? 'var(--green)' : 'var(--red)';
+    document.getElementById('modal-mov-box').style.borderTop = `4px solid ${isEntrada ? 'var(--green)' : 'var(--red)'}`;
+    document.getElementById('modal-mov-info').innerHTML = `Material: <strong>${esc(item.nome)}</strong><br>Estoque atual: <strong style="color:var(--bright)">${item.atual}</strong>`;
+    
+    const btnMov = document.getElementById('modal-mov-btn');
+    btnMov.style.background = isEntrada ? 'var(--green)' : 'var(--red)';
+    btnMov.style.boxShadow = isEntrada ? '0 4px 14px rgba(34, 197, 94, 0.25)' : '0 4px 14px rgba(239, 68, 68, 0.25)';
+    
     document.getElementById('modal-mov-qtd').value = '';
     document.getElementById('modal-mov-obs').value = '';
     document.getElementById('modal-mov').style.display = 'flex';
@@ -1472,9 +1493,9 @@ Os itens voltarão para "Sem categoria".`)) return;
       document.getElementById('modal-mov').style.display = 'none';
       render();
       await carregarHistorico();
-      showToast(movTipo === 'ENTRADA' ? '▲ Entrada registrada.' : '▼ Saída registrada.');
+      showToast(movTipo === 'ENTRADA' ? 'Entrada registrada com sucesso.' : 'Saída registrada com sucesso.');
     } catch {
-      showErro('Erro ao registrar movimentação.');
+      showErro('Erro de conexão ao registrar movimentação.');
     }
   }
 
@@ -1491,14 +1512,14 @@ Os itens voltarão para "Sem categoria".`)) return;
     const el = document.createElement('div');
     el.textContent = msg;
     Object.assign(el.style, {
-      position:'fixed', top:'20px', left:'50%', transform:'translateX(-50%)',
-      background:'#ef4444', color:'#fff', padding:'12px 24px',
-      borderRadius:'10px', fontSize:'14px', fontWeight:'600',
-      zIndex:'9999', boxShadow:'0 8px 30px rgba(0,0,0,0.15)',
-      animation:'fadein 0.2s ease', width:'90%', maxWidth:'400px', textAlign:'center'
+      position:'fixed', top:'24px', left:'50%', transform:'translateX(-50%)',
+      background:'#fef2f2', color:'#b91c1c', border:'1px solid #fecaca', padding:'14px 24px',
+      borderRadius:'12px', fontSize:'14px', fontWeight:'600',
+      zIndex:'9999', boxShadow:'0 12px 40px rgba(0,0,0,0.15)',
+      animation:'fadein 0.3s cubic-bezier(0.16, 1, 0.3, 1)', width:'90%', maxWidth:'400px', textAlign:'center'
     });
     document.body.appendChild(el);
-    setTimeout(() => el.remove(), 3000);
+    setTimeout(() => el.remove(), 4000);
   }
 
   let toastTimeout;
