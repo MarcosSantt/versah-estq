@@ -983,7 +983,7 @@
 
   function abrirModalCompras() {
     const calculados = items.map(calcularItem);
-    const paraRepor = calculados.filter(i => i.quantidadeComprar > 0);
+    const paraRepor = calculados.filter(i => i.precisaReposicao);
     
     const tbody = document.getElementById('corpo-compras-modal');
     if (paraRepor.length === 0) {
@@ -1009,7 +1009,7 @@
 
   function exportarComprasPDF() {
     const calculados = items.map(calcularItem);
-    const paraRepor = calculados.filter(i => i.quantidadeComprar > 0);
+    const paraRepor = calculados.filter(i => i.precisaReposicao);
     if (paraRepor.length === 0) return showErro('Não há materiais para gerar o PDF.');
 
     const itensPorCategoria = {};
