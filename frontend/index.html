@@ -703,10 +703,33 @@
     document.getElementById(`tab-btn-${abaId}`).classList.add('active');
   }
 
+  function normalizarTexto(str) {
+    return String(str || '')
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .toLowerCase().trim().replace(/\s+/g, ' ');
+  }
+
+  // Combina categorias cadastradas manualmente (localStorage) com as que já existem
+  // nos itens vindos do banco (Supabase), deduplicando por texto normalizado.
+  // Assim qualquer categoria salva no banco aparece automaticamente na interface.
+  function categoriasDisponiveis() {
+    const mapa = new Map();
+    listaCategoriasAtivas.forEach(c => {
+      const n = normalizarTexto(c);
+      if (!mapa.has(n)) mapa.set(n, c);
+    });
+    items.forEach(i => {
+      const cat = (i.categoria && String(i.categoria).trim()) ? String(i.categoria).trim() : 'Sem categoria';
+      const n = normalizarTexto(cat);
+      if (!mapa.has(n)) mapa.set(n, cat);
+    });
+    return [...mapa.values()].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  }
+
   function carregarListaCategorias() {
     const salvas = localStorage.getItem(LISTA_CAT_KEY);
     if (!salvas) {
-      listaCategoriasAtivas = ['Sem categoria', 'Insumos', 'Limpeza', 'Escritório', 'Materiais para Cirurgia', 'Outros'];
+      listaCategoriasAtivas = ['Sem categoria'];
       salvarListaCategorias();
     } else {
       listaCategoriasAtivas = JSON.parse(salvas);
@@ -724,11 +747,12 @@
   function atualizarSelectFormulario() {
     const select = document.getElementById('f-categoria');
     const valorAtual = select.value;
-    select.innerHTML = listaCategoriasAtivas.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
-    if (listaCategoriasAtivas.includes(valorAtual)) {
+    const disponiveis = categoriasDisponiveis();
+    select.innerHTML = disponiveis.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    if (disponiveis.includes(valorAtual)) {
       select.value = valorAtual;
-    } else if (listaCategoriasAtivas.length > 0) {
-      select.value = listaCategoriasAtivas[0];
+    } else if (disponiveis.length > 0) {
+      select.value = disponiveis[0];
     }
   }
 
@@ -854,7 +878,7 @@
     const input = document.getElementById('nova-cat-nome');
     const nome = input.value.trim();
     if (!nome) return showErro('Digite um nome para a categoria.');
-    if (listaCategoriasAtivas.some(c => c.toLowerCase() === nome.toLowerCase())) {
+    if (categoriasDisponiveis().some(c => normalizarTexto(c) === normalizarTexto(nome))) {
       return showErro('Esta categoria já existe.');
     }
     listaCategoriasAtivas.push(nome);
@@ -864,37 +888,38 @@
   }
 
   async function editarCategoria(nomeAntigo) {
-    if (nomeAntigo === 'Sem categoria') return showErro('Não é possível editar a categoria padrão.');
+    if (normalizarTexto(nomeAntigo) === normalizarTexto('Sem categoria')) return showErro('Não é possível editar a categoria padrão.');
     const novoNome = prompt(`Renomear categoria "${nomeAntigo}" para:`, nomeAntigo);
     if (!novoNome || novoNome.trim() === '' || novoNome === nomeAntigo) return;
     const nomeFinal = novoNome.trim();
-    if (listaCategoriasAtivas.some(c => c.toLowerCase() === nomeFinal.toLowerCase())) {
+    if (categoriasDisponiveis().some(c => normalizarTexto(c) === normalizarTexto(nomeFinal))) {
       return showErro('Já existe uma categoria com este nome.');
     }
-    const index = listaCategoriasAtivas.indexOf(nomeAntigo);
+    const index = listaCategoriasAtivas.findIndex(c => normalizarTexto(c) === normalizarTexto(nomeAntigo));
     if (index !== -1) listaCategoriasAtivas[index] = nomeFinal;
 
     await renomearCategoriaEmItens(nomeAntigo, nomeFinal);
 
-    if (filtro === nomeAntigo) filtro = nomeFinal;
+    if (filtro === normalizarTexto(nomeAntigo)) filtro = normalizarTexto(nomeFinal);
     salvarListaCategorias();
     showToast('Categoria renomeada.');
   }
 
   async function excluirCategoria(nomeCat) {
-    if (nomeCat === 'Sem categoria') return showErro('Não é possível excluir a categoria padrão.');
+    if (normalizarTexto(nomeCat) === normalizarTexto('Sem categoria')) return showErro('Não é possível excluir a categoria padrão.');
     if (!confirm(`Tem certeza que deseja excluir "${nomeCat}"?\n\nOs itens voltarão para "Sem categoria".`)) return;
-    listaCategoriasAtivas = listaCategoriasAtivas.filter(c => c !== nomeCat);
+    listaCategoriasAtivas = listaCategoriasAtivas.filter(c => normalizarTexto(c) !== normalizarTexto(nomeCat));
 
     await renomearCategoriaEmItens(nomeCat, 'Sem categoria');
 
-    if (filtro === nomeCat) filtro = 'todos';
+    if (filtro === normalizarTexto(nomeCat)) filtro = 'todos';
     salvarListaCategorias();
     showToast('Categoria excluída.');
   }
 
   async function renomearCategoriaEmItens(nomeAntigo, nomeNovo) {
-    const afetados = items.filter(i => (i.categoria || 'Sem categoria') === nomeAntigo);
+    const alvoNorm = normalizarTexto(nomeAntigo);
+    const afetados = items.filter(i => normalizarTexto(i.categoria || 'Sem categoria') === alvoNorm);
     for (const item of afetados) {
       try {
         const res = await fetch(`${API}/estoque/${item.id}`, {
@@ -925,8 +950,8 @@
 
   function renderCategoriasModal() {
     const listDiv = document.getElementById('lista-categorias-modal');
-    listDiv.innerHTML = listaCategoriasAtivas.map(cat => {
-      const isPadrao = cat === 'Sem categoria';
+    listDiv.innerHTML = categoriasDisponiveis().map(cat => {
+      const isPadrao = normalizarTexto(cat) === normalizarTexto('Sem categoria');
       return `
         <div class="cat-item">
           <span>${esc(cat)}</span>
@@ -943,8 +968,7 @@
 
   function obterCategoriaItem(id) {
     const item = items.find(i => i.id === id);
-    const cat = (item && item.categoria) ? item.categoria : 'Sem categoria';
-    return listaCategoriasAtivas.includes(cat) ? cat : 'Sem categoria';
+    return (item && item.categoria && String(item.categoria).trim()) ? String(item.categoria).trim() : 'Sem categoria';
   }
 
   function obterUnidadeItem(id) {
@@ -990,11 +1014,12 @@
 
     const itensPorCategoria = {};
     paraRepor.forEach(item => {
-      const cat = item.categoria || 'Sem categoria';
-      if (!itensPorCategoria[cat]) {
-        itensPorCategoria[cat] = [];
+      const catRaw = item.categoria || 'Sem categoria';
+      const chave = normalizarTexto(catRaw);
+      if (!itensPorCategoria[chave]) {
+        itensPorCategoria[chave] = { label: catRaw, itens: [] };
       }
-      itensPorCategoria[cat].push(item);
+      itensPorCategoria[chave].itens.push(item);
     });
 
     const janelaPrint = window.open('', '_blank');
@@ -1021,8 +1046,8 @@
         <h1>Lista de Compras Automatizada</h1>
         <p>Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p>
         
-        ${Object.keys(itensPorCategoria).sort().map(categoria => `
-          <h2 class="categoria-titulo">${categoria}</h2>
+        ${Object.values(itensPorCategoria).sort((a, b) => a.label.localeCompare(b.label, 'pt-BR')).map(grupo => `
+          <h2 class="categoria-titulo">${grupo.label}</h2>
           <table>
             <thead>
               <tr>
@@ -1033,7 +1058,7 @@
               </tr>
             </thead>
             <tbody>
-              ${itensPorCategoria[categoria].map(i => `
+              ${grupo.itens.map(i => `
                 <tr>
                   <td class="destaque">${i.nome}</td>
                   <td style="text-align: center;">${i.atual}</td>
@@ -1185,7 +1210,7 @@
     const quantidadeComprar = Math.max(0, idealNum - atualNum);
     const precisaReposicao  = atualNum <= minimoNum;
     const percentual        = idealNum > 0 ? Math.min(100, Math.round((atualNum / idealNum) * 100)) : 0;
-    const categoria = listaCategoriasAtivas.includes(item.categoria) ? item.categoria : 'Sem categoria';
+    const categoria = (item.categoria && String(item.categoria).trim()) ? String(item.categoria).trim() : 'Sem categoria';
     const unidade = listaUnidadesAtivas.includes(item.unidade) ? item.unidade : 'un';
     const quantidadeComprarFixed = +quantidadeComprar.toFixed(3);
     
@@ -1214,6 +1239,7 @@
   }
 
   function render() {
+    atualizarSelectFormulario();
     const calculados   = items.map(calcularItem);
     const totalAlerta  = calculados.filter(i => i.precisaReposicao).length;
     const totalComprar = calculados.reduce((s, i) => s + i.quantidadeComprar, 0);
@@ -1225,19 +1251,27 @@
     document.getElementById('kpi-alerta').classList.toggle('alerta', totalAlerta > 0);
     document.getElementById('btn-filtro-alerta').innerHTML = `${iconWarn} Reposição (${totalAlerta})`;
 
-    const categoriasPresentes = [...new Set(calculados.map(i => i.categoria))].sort((a, b) => a.localeCompare(b));
+    // Agrupa por texto normalizado (sem acento/maiúsculas/espaços extras) para que
+    // variações de digitação no banco (ex: "Materiais Cirúrgicos" vs "materiais cirurgicos ")
+    // caiam no mesmo botão de filtro, exibindo o primeiro rótulo encontrado.
+    const categoriasMapa = new Map();
+    calculados.forEach(i => {
+      const norm = normalizarTexto(i.categoria);
+      if (!categoriasMapa.has(norm)) categoriasMapa.set(norm, i.categoria);
+    });
+    const categoriasPresentes = [...categoriasMapa.entries()].sort((a, b) => a[1].localeCompare(b[1], 'pt-BR'));
     const wrapCategorias = document.getElementById('filtros-categorias');
-    wrapCategorias.innerHTML = categoriasPresentes.map(cat => {
-      const ativo = filtro === cat ? ' ativo-categoria' : '';
-      return `<button class="filtro-btn${ativo}" onclick="setFiltro('${esc(cat).replace(/'/g, "\\'")}')">${esc(cat)}</button>`;
+    wrapCategorias.innerHTML = categoriasPresentes.map(([norm, label]) => {
+      const ativo = filtro === norm ? ' ativo-categoria' : '';
+      return `<button class="filtro-btn${ativo}" onclick="setFiltro('${norm.replace(/'/g, "\\'")}')">${esc(label)}</button>`;
     }).join('');
 
     let filtrados = calculados;
-    
+
     if (filtro === 'alerta') {
       filtrados = calculados.filter(i => i.precisaReposicao);
     } else if (filtro !== 'todos') {
-      filtrados = calculados.filter(i => i.categoria === filtro);
+      filtrados = calculados.filter(i => normalizarTexto(i.categoria) === filtro);
     }
 
     if (termoBusca.trim() !== '') {
@@ -1253,7 +1287,7 @@
       else if (sortCol === 'ideal') { valA = a.ideal; valB = b.ideal; } 
       else if (sortCol === 'comprar') { valA = a.quantidadeComprar; valB = b.quantidadeComprar; } 
       else if (sortCol === 'status') { valA = a.precisaReposicao ? 1 : 0; valB = b.precisaReposicao ? 1 : 0; } 
-      else if (sortCol === 'categoria') { valA = a.categoria.toLowerCase(); valB = b.categoria.toLowerCase(); }
+      else if (sortCol === 'categoria') { valA = normalizarTexto(a.categoria); valB = normalizarTexto(b.categoria); }
 
       if (valA < valB) return sortAsc ? -1 : 1;
       if (valA > valB) return sortAsc ? 1 : -1;
@@ -1344,7 +1378,8 @@
     document.getElementById('form-title').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Novo Material';
     ['f-nome','f-minimo','f-atual','f-ideal'].forEach(id => document.getElementById(id).value = '');
     const catSelect = document.getElementById('f-categoria');
-    catSelect.value = listaCategoriasAtivas.includes('Sem categoria') ? 'Sem categoria' : listaCategoriasAtivas[0];
+    const disponiveis = categoriasDisponiveis();
+    catSelect.value = disponiveis.includes('Sem categoria') ? 'Sem categoria' : disponiveis[0];
     const uniSelect = document.getElementById('f-unidade');
     uniSelect.value = listaUnidadesAtivas.includes('un') ? 'un' : listaUnidadesAtivas[0];
     document.getElementById('preview-comprar').textContent = '0';
@@ -1388,7 +1423,7 @@
     const minimo = parseFloat(document.getElementById('f-minimo').value);
     const atual  = parseFloat(document.getElementById('f-atual').value);
     const ideal  = parseFloat(document.getElementById('f-ideal').value);
-    const categoria = document.getElementById('f-categoria').value || 'Sem categoria';
+    const categoria = (document.getElementById('f-categoria').value || 'Sem categoria').trim();
     const unidade = document.getElementById('f-unidade').value || 'un';
 
     if (!nome) return showErro('Informe o nome do material.');
