@@ -727,7 +727,7 @@
   const LISTA_CAT_KEY  = 'versah_lista_categorias';
   const LISTA_UNI_KEY  = 'versah_lista_unidades';
 
-  const CATEGORIAS_IMPLANTES = ['Implantes Neodent', 'Implantes SIN', 'Componentes Neodent', 'Componentes SIN'];
+  const CATEGORIAS_IMPLANTES = ['Implante Neodent', 'Implante S.I.N', 'Componente Neodent', 'Componente SIN'];
   let filtroImplantes     = 'todos';
   let termoBuscaImplantes = '';
   
@@ -755,7 +755,9 @@
   function normalizarTexto(str) {
     return String(str || '')
       .normalize('NFD').replace(/[̀-ͯ]/g, '')
-      .toLowerCase().trim().replace(/\s+/g, ' ');
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}\s]/gu, '')
+      .trim().replace(/\s+/g, ' ');
   }
 
   // Combina categorias cadastradas manualmente (localStorage) com as que já existem
