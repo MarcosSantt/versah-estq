@@ -265,7 +265,7 @@ app.delete('/api/estoque/:id', autenticar, async (req, res) => {
 // ESTOQUE — Registrar movimentação (entrada ou saída)
 // ─────────────────────────────────────────────────────────
 app.post('/api/estoque/:id/mover', autenticar, async (req, res) => {
-  const { tipo, quantidade, observacao } = req.body;  // tipo: 'ENTRADA' | 'SAÍDA'
+  const { tipo, quantidade, observacao, lote, data_validade } = req.body;  // tipo: 'ENTRADA' | 'SAÍDA'
   const itemId = parseInt(req.params.id);
 
   if (!tipo || !['ENTRADA', 'SAÍDA'].includes(tipo))
@@ -273,6 +273,16 @@ app.post('/api/estoque/:id/mover', autenticar, async (req, res) => {
 
   if (!quantidade || quantidade <= 0)
     return res.status(400).json({ erro: 'Quantidade deve ser maior que zero.' });
+
+  // Lote e validade são obrigatórios para entradas (rastreabilidade do que entrou no estoque)
+  if (tipo === 'ENTRADA') {
+    if (!lote || !lote.trim())
+      return res.status(400).json({ erro: 'Número do lote é obrigatório para entradas.' });
+    if (!data_validade || !/^\d{4}-\d{2}-\d{2}$/.test(data_validade))
+      return res.status(400).json({ erro: 'Data de validade é obrigatória e deve ser válida para entradas.' });
+  } else if (data_validade && !/^\d{4}-\d{2}-\d{2}$/.test(data_validade)) {
+    return res.status(400).json({ erro: 'Data de validade inválida.' });
+  }
 
   const client = await pool.connect();
   try {
@@ -306,9 +316,9 @@ app.post('/api/estoque/:id/mover', autenticar, async (req, res) => {
 
     // Registra no histórico
     await client.query(
-      `INSERT INTO historico_movimentacoes (usuario_id, item_id, item_nome, tipo, quantidade, observacao)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [req.usuario.id, itemId, item.nome, tipo, quantidade, observacao || null]
+      `INSERT INTO historico_movimentacoes (usuario_id, item_id, item_nome, tipo, quantidade, observacao, lote, data_validade)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [req.usuario.id, itemId, item.nome, tipo, quantidade, observacao || null, (lote && lote.trim()) || null, data_validade || null]
     );
 
     await client.query('COMMIT');
@@ -337,7 +347,8 @@ app.post('/api/estoque/:id/mover', autenticar, async (req, res) => {
 app.get('/api/historico', autenticar, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT id, item_id, item_nome, tipo, quantidade, observacao, criado_em
+      `SELECT id, item_id, item_nome, tipo, quantidade, observacao, lote,
+              TO_CHAR(data_validade, 'YYYY-MM-DD') AS data_validade, criado_em
        FROM historico_movimentacoes
        WHERE usuario_id = $1
        ORDER BY criado_em DESC

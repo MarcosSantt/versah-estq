@@ -30,14 +30,16 @@ CREATE TABLE IF NOT EXISTS estoque_items (
 
 -- ── Tabela de histórico de movimentaçõess ─────────────────
 CREATE TABLE IF NOT EXISTS historico_movimentacoes (
-  id         SERIAL PRIMARY KEY,
-  usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
-  item_id    INTEGER REFERENCES estoque_items(id) ON DELETE SET NULL,
-  item_nome  VARCHAR(200) NOT NULL,
-  tipo       VARCHAR(10)  NOT NULL CHECK (tipo IN ('ENTRADA', 'SAÍDA')),
-  quantidade INTEGER NOT NULL,
-  observacao TEXT,
-  criado_em  TIMESTAMPTZ DEFAULT NOW()
+  id            SERIAL PRIMARY KEY,
+  usuario_id    INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  item_id       INTEGER REFERENCES estoque_items(id) ON DELETE SET NULL,
+  item_nome     VARCHAR(200) NOT NULL,
+  tipo          VARCHAR(10)  NOT NULL CHECK (tipo IN ('ENTRADA', 'SAÍDA')),
+  quantidade    INTEGER NOT NULL,
+  observacao    TEXT,
+  lote          VARCHAR(100),
+  data_validade DATE,
+  criado_em     TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Índices para performance
