@@ -363,6 +363,34 @@ app.get('/api/historico', autenticar, async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────
+// LOTES — Alerta de lotes vencidos ou vencendo nos próximos 60 dias
+// Baseado na data de validade informada nas entradas (não controla
+// saldo restante por lote — apenas avisa sobre lotes já recebidos).
+// ─────────────────────────────────────────────────────────
+app.get('/api/lotes/alertas', autenticar, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT DISTINCT ON (item_id, lote)
+              item_id, item_nome, lote,
+              TO_CHAR(data_validade, 'YYYY-MM-DD') AS data_validade
+       FROM historico_movimentacoes
+       WHERE usuario_id = $1
+         AND tipo = 'ENTRADA'
+         AND lote IS NOT NULL
+         AND data_validade IS NOT NULL
+         AND data_validade <= (CURRENT_DATE + INTERVAL '60 days')
+       ORDER BY item_id, lote, criado_em DESC`,
+      [req.usuario.id]
+    );
+    result.rows.sort((a, b) => a.data_validade.localeCompare(b.data_validade));
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Erro ao carregar alertas de lote:', err);
+    res.status(500).json({ erro: 'Erro ao carregar alertas de lote.' });
+  }
+});
+
+// ─────────────────────────────────────────────────────────
 // Healthcheck
 // ─────────────────────────────────────────────────────────
 app.get('/health', (_, res) => res.json({ status: 'ok' }));
