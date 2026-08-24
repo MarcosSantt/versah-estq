@@ -944,7 +944,6 @@
   const LISTA_CAT_KEY  = 'versah_lista_categorias';
   const LISTA_UNI_KEY  = 'versah_lista_unidades';
 
-  const CATEGORIAS_IMPLANTES = ['Implante Neodent', 'Implante S.I.N', 'Componente Neodent', 'Componente SIN'];
   let filtroImplantes     = 'todos';
   let termoBuscaImplantes = '';
   
@@ -1104,6 +1103,16 @@
       .toLowerCase()
       .replace(/[^\p{L}\p{N}\s]/gu, '')
       .trim().replace(/\s+/g, ' ');
+  }
+
+  // Reconhece a categoria de uma peça de implante/componente por palavra-chave
+  // (não por string exata) — cobre singular/plural e variações de pontuação
+  // (ex: "Implante Neodent", "Implantes Neodent", "Componente S.I.N", "Componentes SIN").
+  function ehCategoriaImplante(categoria) {
+    const tokens = normalizarTexto(categoria).split(' ');
+    const temTipo  = tokens.some(t => t === 'implante' || t === 'implantes' || t === 'componente' || t === 'componentes');
+    const temMarca = tokens.some(t => t === 'neodent' || t === 'sin');
+    return temTipo && temMarca;
   }
 
   // Combina categorias cadastradas manualmente (localStorage) com as que já existem
@@ -1854,16 +1863,20 @@
 
   // Aba de consulta somente-leitura com as categorias de implantes/componentes.
   function renderImplantes() {
-    const alvoNorm  = CATEGORIAS_IMPLANTES.map(normalizarTexto);
-    const calculados = items.map(calcularItem).filter(i => alvoNorm.includes(normalizarTexto(i.categoria)));
+    const calculados = items.map(calcularItem).filter(i => ehCategoriaImplante(i.categoria));
 
-    const presentes = CATEGORIAS_IMPLANTES.filter(cat =>
-      calculados.some(i => normalizarTexto(i.categoria) === normalizarTexto(cat))
-    );
-    document.getElementById('filtros-implantes-categorias').innerHTML = presentes.map(cat => {
-      const norm  = normalizarTexto(cat);
+    // Rótulo dos filtros vem do próprio dado (igual ao "Meu Estoque"), não de uma lista fixa —
+    // assim qualquer grafia real do banco ("Implante"/"Implantes", "SIN"/"S.I.N"...) aparece certa.
+    const categoriasMapa = new Map();
+    calculados.forEach(i => {
+      const norm = normalizarTexto(i.categoria);
+      if (!categoriasMapa.has(norm)) categoriasMapa.set(norm, i.categoria);
+    });
+    const presentes = [...categoriasMapa.entries()].sort((a, b) => a[1].localeCompare(b[1], 'pt-BR'));
+
+    document.getElementById('filtros-implantes-categorias').innerHTML = presentes.map(([norm, label]) => {
       const ativo = filtroImplantes === norm ? ' ativo-categoria' : '';
-      return `<button class="filtro-btn${ativo}" onclick="setFiltroImplantes('${norm.replace(/'/g, "\\'")}')">${esc(cat)}</button>`;
+      return `<button class="filtro-btn${ativo}" onclick="setFiltroImplantes('${norm.replace(/'/g, "\\'")}')">${esc(label)}</button>`;
     }).join('');
     document.getElementById('btn-filtro-implantes-todos').className = 'filtro-btn' + (filtroImplantes === 'todos' ? ' ativo-todos' : '');
 
@@ -1957,12 +1970,11 @@
       wrap.innerHTML = `<div class="dash-list-empty">Nenhum item cadastrado ainda.</div>`;
       return;
     }
-    const alvoImplantesNorm = CATEGORIAS_IMPLANTES.map(normalizarTexto);
     const maxTotal = Math.max(...grupos.map(g => g.total));
     wrap.innerHTML = grupos.map(g => {
       const pct = Math.max(4, Math.round((g.total / maxTotal) * 100));
       let clique = '';
-      if (g.norm && alvoImplantesNorm.includes(g.norm)) {
+      if (g.norm && ehCategoriaImplante(g.label)) {
         clique = `onclick="mudarAba('implantes'); setFiltroImplantes('${g.norm.replace(/'/g, "\\'")}')"`;
       } else if (g.norm) {
         clique = `onclick="mudarAba('estoque'); setFiltro('${g.norm.replace(/'/g, "\\'")}')"`;
