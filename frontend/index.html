@@ -1106,12 +1106,14 @@
   }
 
   // Reconhece a categoria de uma peça de implante/componente por palavra-chave
-  // (não por string exata) — cobre singular/plural e variações de pontuação
-  // (ex: "Implante Neodent", "Implantes Neodent", "Componente S.I.N", "Componentes SIN").
+  // (não por string exata) — cobre singular/plural, variações de pontuação e
+  // grafias como "Neodente" (ex: "Implante Neodent", "Implantes Neodente",
+  // "Componente S.I.N", "Componentes SIN"). "sin" fica com correspondência
+  // exata de propósito, pra não pegar falso positivo em "Sintético".
   function ehCategoriaImplante(categoria) {
     const tokens = normalizarTexto(categoria).split(' ');
     const temTipo  = tokens.some(t => t === 'implante' || t === 'implantes' || t === 'componente' || t === 'componentes');
-    const temMarca = tokens.some(t => t === 'neodent' || t === 'sin');
+    const temMarca = tokens.some(t => t === 'sin' || t.startsWith('neodent'));
     return temTipo && temMarca;
   }
 
