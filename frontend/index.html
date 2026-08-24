@@ -1750,8 +1750,8 @@
     btnMov.style.background = isEntrada ? 'var(--green)' : 'var(--red)';
     btnMov.style.boxShadow = isEntrada ? '0 4px 14px rgba(34, 197, 94, 0.25)' : '0 4px 14px rgba(239, 68, 68, 0.25)';
 
-    document.getElementById('modal-mov-lote-label').textContent = isEntrada ? 'Número do Lote (obrigatório)' : 'Número do Lote (opcional)';
-    document.getElementById('modal-mov-validade-label').textContent = isEntrada ? 'Data de Validade (obrigatório)' : 'Data de Validade (opcional)';
+    document.getElementById('modal-mov-lote-label').textContent = 'Número do Lote (opcional)';
+    document.getElementById('modal-mov-validade-label').textContent = 'Data de Validade (opcional)';
 
     document.getElementById('modal-mov-qtd').value = '';
     document.getElementById('modal-mov-lote').value = '';
@@ -1767,8 +1767,6 @@
     const validade = document.getElementById('modal-mov-validade').value;
     const obs    = document.getElementById('modal-mov-obs').value.trim();
     if (!qtd || qtd <= 0) return showErro('Informe uma quantidade válida.');
-    if (movTipo === 'ENTRADA' && !lote) return showErro('Informe o número do lote para a entrada.');
-    if (movTipo === 'ENTRADA' && !validade) return showErro('Informe a data de validade para a entrada.');
     try {
       const res = await fetch(`${API}/estoque/${movId}/mover`, {
         method: 'POST', headers: authHeaders(),

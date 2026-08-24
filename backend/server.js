@@ -274,13 +274,8 @@ app.post('/api/estoque/:id/mover', autenticar, async (req, res) => {
   if (!quantidade || quantidade <= 0)
     return res.status(400).json({ erro: 'Quantidade deve ser maior que zero.' });
 
-  // Lote e validade são obrigatórios para entradas (rastreabilidade do que entrou no estoque)
-  if (tipo === 'ENTRADA') {
-    if (!lote || !lote.trim())
-      return res.status(400).json({ erro: 'Número do lote é obrigatório para entradas.' });
-    if (!data_validade || !/^\d{4}-\d{2}-\d{2}$/.test(data_validade))
-      return res.status(400).json({ erro: 'Data de validade é obrigatória e deve ser válida para entradas.' });
-  } else if (data_validade && !/^\d{4}-\d{2}-\d{2}$/.test(data_validade)) {
+  // Lote e validade são opcionais, tanto para entrada quanto para saída
+  if (data_validade && !/^\d{4}-\d{2}-\d{2}$/.test(data_validade)) {
     return res.status(400).json({ erro: 'Data de validade inválida.' });
   }
 
