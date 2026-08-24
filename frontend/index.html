@@ -963,7 +963,7 @@
       return;
     }
     wrap.innerHTML = paletteResultados.map((c, i) => `
-      <div class="palette-item${i === paletteIndex ? ' active' : ''}" onmouseenter="paletteIndex=${i}; renderPaletteResultados();" onclick="executarPalette(${i})">
+      <div class="palette-item${i === paletteIndex ? ' active' : ''}" onmouseenter="ativarPaletteItem(${i})" onclick="executarPalette(${i})">
         ${c.icone}
         <span>${esc(c.label)}</span>
         <span class="palette-hint">${esc(c.hint)}</span>
@@ -971,6 +971,16 @@
     `).join('');
     const ativo = wrap.querySelector('.palette-item.active');
     if (ativo) ativo.scrollIntoView({ block: 'nearest' });
+  }
+
+  // Só alterna a classe .active nos nós já existentes (sem recriar o innerHTML).
+  // Recriar o HTML dentro de onmouseenter destruía o elemento no meio da sequência
+  // mousedown->mouseup, cancelando o clique — por isso o comando não executava.
+  function ativarPaletteItem(i) {
+    paletteIndex = i;
+    document.querySelectorAll('#palette-results .palette-item').forEach((el, idx) => {
+      el.classList.toggle('active', idx === i);
+    });
   }
 
   function executarPalette(i) {
