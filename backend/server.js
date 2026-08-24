@@ -335,6 +335,9 @@ app.post('/api/estoque/:id/mover', autenticar, async (req, res) => {
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('Erro na movimentação:', err);
+    if (err.code === '42703') {
+      return res.status(500).json({ erro: 'As colunas "lote"/"data_validade" ainda não existem na tabela historico_movimentacoes. Rode o ALTER TABLE no Supabase antes de tentar novamente.' });
+    }
     res.status(500).json({ erro: 'Erro ao registrar movimentação.' });
   } finally {
     client.release();
