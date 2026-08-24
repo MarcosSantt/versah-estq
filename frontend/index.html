@@ -1957,10 +1957,16 @@
       wrap.innerHTML = `<div class="dash-list-empty">Nenhum item cadastrado ainda.</div>`;
       return;
     }
+    const alvoImplantesNorm = CATEGORIAS_IMPLANTES.map(normalizarTexto);
     const maxTotal = Math.max(...grupos.map(g => g.total));
     wrap.innerHTML = grupos.map(g => {
       const pct = Math.max(4, Math.round((g.total / maxTotal) * 100));
-      const clique = g.norm ? `onclick="mudarAba('estoque'); setFiltro('${g.norm.replace(/'/g, "\\'")}')"` : '';
+      let clique = '';
+      if (g.norm && alvoImplantesNorm.includes(g.norm)) {
+        clique = `onclick="mudarAba('implantes'); setFiltroImplantes('${g.norm.replace(/'/g, "\\'")}')"`;
+      } else if (g.norm) {
+        clique = `onclick="mudarAba('estoque'); setFiltro('${g.norm.replace(/'/g, "\\'")}')"`;
+      }
       return `
         <div class="catbar-row">
           <div class="catbar-label" title="${esc(g.label)}">${esc(g.label)}</div>
