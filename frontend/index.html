@@ -57,6 +57,21 @@
     .sidebar-title { font-weight: 600; font-size: 17px; color: var(--surface); letter-spacing: -0.02em; line-height: 1.25; }
     .sidebar-tag { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
 
+    .sidebar-search-btn {
+      display: flex; align-items: center; gap: 10px; width: 100%;
+      padding: 10px 12px; margin-top: 4px; border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05);
+      color: var(--muted); font-size: 13px; font-weight: 500; font-family: var(--sans);
+      cursor: pointer; transition: all 0.2s ease;
+    }
+    .sidebar-search-btn:hover { background: rgba(255,255,255,0.1); color: var(--surface); }
+    .sidebar-search-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .sidebar-search-btn-label { flex: 1; text-align: left; }
+    .sidebar-search-kbd {
+      font-family: var(--mono); font-size: 11px; padding: 2px 6px; border-radius: 6px;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); color: var(--muted);
+    }
+
     .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
     .sidebar-link {
       display: flex; align-items: center; gap: 12px;
@@ -298,6 +313,28 @@
     .cat-item:last-child { border-bottom: none; }
     .cat-item-actions { display: flex; gap: 6px; }
 
+    /* ── Command Palette ── */
+    #modal-palette { align-items: flex-start; padding-top: 12vh; }
+    .palette-box { max-width: 560px; width: 100%; padding: 0; overflow: hidden; }
+    .palette-input-wrap { display: flex; align-items: center; gap: 12px; padding: 20px 24px; border-bottom: 1px solid var(--border); }
+    .palette-input-wrap svg { width: 20px; height: 20px; color: var(--subtle); flex-shrink: 0; }
+    .palette-input-wrap input {
+      flex: 1; border: none; outline: none; font-size: 16px;
+      font-family: var(--sans); color: var(--primary); background: transparent;
+    }
+    .palette-input-wrap input::placeholder { color: var(--muted); }
+    .palette-results { max-height: 400px; overflow-y: auto; padding: 8px; }
+    .palette-item {
+      display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+      border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--primary);
+    }
+    .palette-item svg { width: 16px; height: 16px; color: var(--subtle); flex-shrink: 0; }
+    .palette-item .palette-hint { margin-left: auto; font-size: 12px; color: var(--subtle); font-weight: 500; white-space: nowrap; }
+    .palette-item:hover { background: #F8F7F4; }
+    .palette-item.active { background: var(--accent); color: #fff; }
+    .palette-item.active svg, .palette-item.active .palette-hint { color: rgba(255,255,255,0.85); }
+    .palette-empty { padding: 40px 24px; text-align: center; color: var(--subtle); font-size: 14px; }
+
     /* ── Loading & Toast ── */
     #loading-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 999; flex-direction: column; gap: 20px; }
     .page-spinner { width: 44px; height: 44px; border: 3px solid rgba(195, 163, 101, 0.3); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
@@ -371,6 +408,12 @@
         <div class="sidebar-tag">EstoqueControl</div>
       </div>
     </div>
+
+    <button class="sidebar-search-btn" onclick="abrirPalette()" title="Buscar comandos e materiais">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span class="sidebar-search-btn-label">Buscar...</span>
+      <span class="sidebar-search-kbd">Ctrl K</span>
+    </button>
 
     <nav class="sidebar-nav">
       <button id="tab-btn-estoque" class="sidebar-link active" onclick="mudarAba('estoque')">
@@ -783,6 +826,16 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-palette" onclick="fecharPalette(event)">
+  <div class="modal-box palette-box">
+    <div class="palette-input-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="palette-input" placeholder="Digite um comando ou busque um material..." autocomplete="off" oninput="filtrarPalette(this.value)" onkeydown="paletteKeydown(event)" />
+    </div>
+    <div class="palette-results" id="palette-results"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- LÓGICA DE BACKEND ORIGINAL (Mantida perfeitamente intacta, apenas templates SVG ajustados) -->
@@ -792,6 +845,8 @@
   let items      = [];
   let historico  = [];
   let lotesAlerta = [];
+  let paletteResultados = [];
+  let paletteIndex = 0;
   let editandoId = null;
   let movId      = null;
   let movTipo    = null;
@@ -819,6 +874,15 @@
   const iconDown = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>';
   const iconWarn = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
   const iconCheck= '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+  const iconBox   = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
+  const iconHist  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>';
+  const iconLayers= '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>';
+  const iconPlus  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+  const iconCart  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>';
+  const iconChart = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>';
+  const iconClock = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+  const iconGear  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+  const iconLogout= '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
 
   // Lógica das Abas
   function mudarAba(abaId) {
@@ -836,6 +900,109 @@
     document.getElementById('sidebar').classList.toggle('open', abrir);
     document.getElementById('sidebar-backdrop').classList.toggle('open', abrir);
   }
+
+  // ── Command Palette (Ctrl+K) ──────────────────────────────
+  // Busca simples por substring (sem IA): navegação, ações do sistema e materiais do estoque.
+  function getComandosPalette() {
+    const comandos = [
+      { label: 'Meu Estoque', hint: 'Ir para', icone: iconBox, run: () => mudarAba('estoque') },
+      { label: 'Histórico de Movimentações', hint: 'Ir para', icone: iconHist, run: () => mudarAba('historico') },
+      { label: 'Implantes & Componentes', hint: 'Ir para', icone: iconLayers, run: () => mudarAba('implantes') },
+      { label: 'Novo Item', hint: 'Ação', icone: iconPlus, run: () => { mudarAba('estoque'); abrirFormNovo(); } },
+      { label: 'Lista de Compras', hint: 'Ação', icone: iconCart, run: () => abrirModalCompras() },
+      { label: 'Relatório de Consumo', hint: 'Ação', icone: iconChart, run: () => abrirModalRelatorio() },
+      { label: 'Lotes Vencidos ou Vencendo', hint: 'Ação', icone: iconClock, run: () => abrirModalLotes() },
+      { label: 'Gerenciar Categorias', hint: 'Ação', icone: iconGear, run: () => abrirModalCategorias() },
+      { label: 'Gerenciar Unidades', hint: 'Ação', icone: iconGear, run: () => abrirModalUnidades() },
+      { label: 'Filtrar: Todos os Itens', hint: 'Filtro', icone: iconBox, run: () => { mudarAba('estoque'); setFiltro('todos'); } },
+      { label: 'Filtrar: Itens para Repor', hint: 'Filtro', icone: iconWarn, run: () => { mudarAba('estoque'); setFiltro('alerta'); } },
+      { label: 'Sair do Sistema', hint: 'Conta', icone: iconLogout, run: () => logout() },
+    ];
+
+    items.forEach(item => {
+      comandos.push({
+        label: item.nome,
+        hint: `Editar · ${item.categoria || 'Sem categoria'}`,
+        icone: iconEdit,
+        run: () => { mudarAba('estoque'); abrirFormEditar(item.id); }
+      });
+    });
+
+    return comandos;
+  }
+
+  function abrirPalette() {
+    document.getElementById('modal-palette').style.display = 'flex';
+    const input = document.getElementById('palette-input');
+    input.value = '';
+    filtrarPalette('');
+    setTimeout(() => input.focus(), 50);
+  }
+
+  function fecharPalette(e) {
+    if (!e || e.target === document.getElementById('modal-palette')) {
+      document.getElementById('modal-palette').style.display = 'none';
+    }
+  }
+
+  function filtrarPalette(query) {
+    const termo = normalizarTexto(query);
+    const todos = getComandosPalette();
+    paletteResultados = (termo
+      ? todos.filter(c => normalizarTexto(c.label).includes(termo) || normalizarTexto(c.hint).includes(termo))
+      : todos
+    ).slice(0, 8);
+    paletteIndex = 0;
+    renderPaletteResultados();
+  }
+
+  function renderPaletteResultados() {
+    const wrap = document.getElementById('palette-results');
+    if (paletteResultados.length === 0) {
+      wrap.innerHTML = `<div class="palette-empty">Nenhum resultado encontrado.</div>`;
+      return;
+    }
+    wrap.innerHTML = paletteResultados.map((c, i) => `
+      <div class="palette-item${i === paletteIndex ? ' active' : ''}" onmouseenter="paletteIndex=${i}; renderPaletteResultados();" onclick="executarPalette(${i})">
+        ${c.icone}
+        <span>${esc(c.label)}</span>
+        <span class="palette-hint">${esc(c.hint)}</span>
+      </div>
+    `).join('');
+    const ativo = wrap.querySelector('.palette-item.active');
+    if (ativo) ativo.scrollIntoView({ block: 'nearest' });
+  }
+
+  function executarPalette(i) {
+    const comando = paletteResultados[i];
+    if (!comando) return;
+    fecharPalette();
+    comando.run();
+  }
+
+  function paletteKeydown(event) {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      paletteIndex = Math.min(paletteIndex + 1, paletteResultados.length - 1);
+      renderPaletteResultados();
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      paletteIndex = Math.max(paletteIndex - 1, 0);
+      renderPaletteResultados();
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      executarPalette(paletteIndex);
+    } else if (event.key === 'Escape') {
+      fecharPalette();
+    }
+  }
+
+  document.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+      event.preventDefault();
+      abrirPalette();
+    }
+  });
 
   function normalizarTexto(str) {
     return String(str || '')
