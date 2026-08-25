@@ -1402,7 +1402,7 @@
     const calculados = items.map(calcularItem).filter(i =>
       escopoCompras === 'implantes' ? ehCategoriaImplante(i.categoria) : !ehCategoriaImplante(i.categoria)
     );
-    const paraRepor = calculados.filter(i => i.precisaReposicao);
+    const paraRepor = calculados.filter(i => i.precisaReposicao && i.quantidadeComprar > 0);
 
     document.getElementById('modal-compras-titulo').textContent =
       escopoCompras === 'implantes' ? 'Lista de Compras — Implantes & Componentes' : 'Lista de Compras Automatizada';
@@ -1433,7 +1433,7 @@
     const calculados = items.map(calcularItem).filter(i =>
       escopoCompras === 'implantes' ? ehCategoriaImplante(i.categoria) : !ehCategoriaImplante(i.categoria)
     );
-    const paraRepor = calculados.filter(i => i.precisaReposicao);
+    const paraRepor = calculados.filter(i => i.precisaReposicao && i.quantidadeComprar > 0);
     if (paraRepor.length === 0) return showErro('Não há materiais para gerar o PDF.');
 
     const tituloPdf = escopoCompras === 'implantes' ? 'Lista de Compras — Implantes & Componentes' : 'Lista de Compras Automatizada';
