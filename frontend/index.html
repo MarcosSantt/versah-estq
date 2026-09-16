@@ -724,10 +724,11 @@
               <th>Ideal</th>
               <th>A Comprar</th>
               <th>Status</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody id="tabela-implantes-body">
-            <tr><td colspan="7" class="empty-state">Nenhum item cadastrado nessas categorias.</td></tr>
+            <tr><td colspan="8" class="empty-state">Nenhum item cadastrado nessas categorias.</td></tr>
           </tbody>
         </table>
       </div>
@@ -1917,7 +1918,7 @@
 
     const tbody = document.getElementById('tabela-implantes-body');
     if (filtrados.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Nenhum item encontrado nessas categorias.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" class="empty-state">Nenhum item encontrado nessas categorias.</td></tr>`;
       return;
     }
 
@@ -1943,6 +1944,14 @@
             <span class="badge ${item.precisaReposicao ? 'repor' : 'ok'}">
               ${item.precisaReposicao ? iconWarn + ' Repor' : iconCheck + ' OK'}
             </span>
+          </td>
+          <td>
+            <div class="action-wrap">
+              <button class="action-btn entrada" title="Registrar Entrada" onclick="abrirMov(${item.id},'ENTRADA')">${iconUp}</button>
+              <button class="action-btn saida"   title="Registrar Saída" onclick="abrirMov(${item.id},'SAÍDA')">${iconDown}</button>
+              <button class="action-btn edit"    title="Editar Material" onclick="abrirFormEditar(${item.id})">${iconEdit}</button>
+              <button class="action-btn del"     title="Remover Material" onclick="pedirDelete(${item.id})">${iconDel}</button>
+            </div>
           </td>
         </tr>`;
     }).join('');
@@ -2121,6 +2130,7 @@
   function abrirFormEditar(id) {
     const item = items.find(i => i.id === id);
     if (!item) return;
+    mudarAba('estoque');
     editandoId = id;
     document.getElementById('form-title').innerHTML = `${iconEdit} Editar Material`;
     document.getElementById('f-nome').value   = item.nome;
