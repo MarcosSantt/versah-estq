@@ -310,7 +310,12 @@
 <div class="toast" id="toast"></div>
  
 <script>
-  const API = 'https://versah-backend.onrender.com/api';
+  const API = (() => {
+    const host = window.location.hostname;
+    const protocol = window.location.protocol === 'https:' ? 'https' : 'http';
+    const localHosts = ['localhost', '127.0.0.1'];
+    return localHosts.includes(host) ? `${protocol}://localhost:3000/api` : 'https://versah-backend.onrender.com/api';
+  })();
  
   // Redireciona se já estiver logado
   if (localStorage.getItem('versah_token')) {
