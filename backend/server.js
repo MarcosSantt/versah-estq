@@ -13,7 +13,7 @@
  * DELETE /api/estoque/:id         — remove item
  * POST   /api/estoque/:id/mover   — registra entrada ou saída
  *
- * GET    /api/historico           — últimas 50 movimentações do usuário
+ * GET    /api/historico           — últimas movimentações (padrão 50, ?limite=N até 2000)
  */
 
 const express   = require('express');
@@ -143,7 +143,7 @@ app.get('/api/auth/me', autenticar, async (req, res) => {
 app.get('/api/estoque', autenticar, async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, nome, atual, minimo, ideal, categoria, unidade FROM estoque_items WHERE usuario_id = $1 ORDER BY nome',
+      'SELECT id, nome, atual, minimo, ideal, categoria, unidade, criado_em FROM estoque_items WHERE usuario_id = $1 ORDER BY nome',
       [req.usuario.id]
     );
     res.json(result.rows);
@@ -175,7 +175,7 @@ app.post('/api/estoque', autenticar, async (req, res) => {
     const result = await pool.query(
       `INSERT INTO estoque_items (usuario_id, nome, atual, minimo, ideal, categoria, unidade)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING id, nome, atual, minimo, ideal, categoria, unidade`,
+       RETURNING id, nome, atual, minimo, ideal, categoria, unidade, criado_em`,
       [req.usuario.id, nome.trim(), atual, minimo, ideal, categoriaFinal, unidadeFinal]
     );
     res.status(201).json(result.rows[0]);
@@ -343,6 +343,7 @@ app.post('/api/estoque/:id/mover', autenticar, async (req, res) => {
 // HISTÓRICO — Últimas 50 movimentações do usuário
 // ─────────────────────────────────────────────────────────
 app.get('/api/historico', autenticar, async (req, res) => {
+  const limite = Math.min(Math.max(parseInt(req.query.limite) || 50, 1), 2000);
   try {
     const result = await pool.query(
       `SELECT id, item_id, item_nome, tipo, quantidade, observacao, lote,
@@ -350,8 +351,8 @@ app.get('/api/historico', autenticar, async (req, res) => {
        FROM historico_movimentacoes
        WHERE usuario_id = $1
        ORDER BY criado_em DESC
-       LIMIT 50`,
-      [req.usuario.id]
+       LIMIT $2`,
+      [req.usuario.id, limite]
     );
     res.json(result.rows);
   } catch (err) {
