@@ -17,7 +17,8 @@ versah-estoquecontrol/
 │   └── init.sql                ← Schema do banco (roda no 1º boot)
 └── frontend/
     ├── login.html              ← Tela de login e cadastro
-    └── index.html              ← Tela principal do estoque
+    ├── index.html              ← Tela principal do estoque
+    └── admin.html              ← Área do administrador
 ```
 
 ---
@@ -87,6 +88,26 @@ openssl rand -base64 32
 
 ---
 
+## Área do administrador
+
+Em `admin.html` (link **Administração** no menu lateral, visível só para administradores):
+
+- **Visão geral** — usuários ativos, acessos nos últimos 7 dias, itens cadastrados, itens em alerta e
+  movimentações dos últimos 30 dias, somando todos os usuários.
+- **Usuários** — criar conta, editar nome/e-mail, marcar como administrador, ativar/desativar,
+  redefinir senha e ver o estoque de cada usuário (somente leitura).
+- **Configurações** — ligar/desligar o cadastro livre na tela de login.
+
+Ao criar uma conta ou redefinir a senha, o sistema gera uma **senha provisória** exibida uma única vez;
+no primeiro acesso a pessoa é obrigada a definir a própria senha. Desativar um usuário ou redefinir a
+senha encerra as sessões abertas dele na hora.
+
+### Primeiro administrador
+
+Defina a variável `ADMIN_EMAIL` no backend (Render ou `docker-compose.yml`) com o e-mail de uma conta
+já cadastrada e reinicie: ela vira administradora automaticamente. Depois disso, outros administradores
+podem ser marcados pela própria tela. As colunas e tabelas novas são criadas sozinhas ao subir o backend.
+
 ## Endpoints da API
 
 ```
@@ -101,6 +122,17 @@ DELETE /api/estoque/:id          Remove item
 POST   /api/estoque/:id/mover    Entrada ou saída de estoque
 
 GET    /api/historico            Últimas 50 movimentações
+POST   /api/auth/trocar-senha    Troca a própria senha
+GET    /api/config               Configurações públicas (autocadastro)
+
+GET    /api/admin/resumo                       Números gerais (admin)
+GET    /api/admin/usuarios                     Lista usuários com indicadores
+POST   /api/admin/usuarios                     Cria usuário com senha provisória
+PUT    /api/admin/usuarios/:id                 Edita nome, e-mail, perfil e status
+POST   /api/admin/usuarios/:id/redefinir-senha Gera nova senha provisória
+GET    /api/admin/usuarios/:id/estoque         Estoque do usuário (leitura)
+GET    /api/admin/configuracoes                Configurações
+PUT    /api/admin/configuracoes                Salva configurações
 GET    /health                   Healthcheck
 ```
 

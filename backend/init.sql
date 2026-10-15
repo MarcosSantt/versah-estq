@@ -12,6 +12,11 @@ CREATE TABLE IF NOT EXISTS usuarios (
   nome       VARCHAR(150)        NOT NULL,
   email      VARCHAR(255) UNIQUE NOT NULL,
   senha_hash TEXT                NOT NULL,
+  is_admin          BOOLEAN NOT NULL DEFAULT false,
+  ativo             BOOLEAN NOT NULL DEFAULT true,
+  deve_trocar_senha BOOLEAN NOT NULL DEFAULT false,
+  token_versao      INTEGER NOT NULL DEFAULT 0,
+  ultimo_acesso     TIMESTAMPTZ,
   criado_em  TIMESTAMPTZ         DEFAULT NOW()
 );
 
@@ -24,6 +29,8 @@ CREATE TABLE IF NOT EXISTS estoque_items (
   atual        INTEGER NOT NULL DEFAULT 0,
   minimo       INTEGER NOT NULL DEFAULT 0,
   ideal        INTEGER NOT NULL DEFAULT 0,
+  categoria    VARCHAR(100) NOT NULL DEFAULT 'Sem categoria',
+  unidade      VARCHAR(20)  NOT NULL DEFAULT 'un',
   criado_em    TIMESTAMPTZ DEFAULT NOW(),
   atualizado_em TIMESTAMPTZ DEFAULT NOW()
 );
@@ -41,6 +48,13 @@ CREATE TABLE IF NOT EXISTS historico_movimentacoes (
   data_validade DATE,
   criado_em     TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- ── Configurações gerais (linha única) ────────────────────
+CREATE TABLE IF NOT EXISTS configuracoes (
+  id                SMALLINT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  permitir_cadastro BOOLEAN NOT NULL DEFAULT true
+);
+INSERT INTO configuracoes (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
 
 -- Índices para performance
 CREATE INDEX IF NOT EXISTS idx_estoque_usuario   ON estoque_items(usuario_id);

@@ -510,6 +510,36 @@
       </p>
     </div>
 
+    <!-- Primeiro acesso: troca da senha provisória -->
+    <div id="painel-troca" style="display:none">
+      <h2 class="recovery-title">Defina sua senha</h2>
+      <p class="recovery-desc" style="margin-bottom: 24px;">
+        Você entrou com uma senha provisória. Crie uma senha pessoal para continuar.
+      </p>
+      <div class="form-group">
+        <label>Nova senha</label>
+        <div class="input-wrap">
+          <input type="password" id="troca-senha" placeholder="Mínimo 8 caracteres" />
+          <button class="toggle-senha" type="button" onclick="toggleSenha('troca-senha', this)" title="Mostrar/ocultar senha">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Confirmar nova senha</label>
+        <div class="input-wrap">
+          <input type="password" id="troca-confirma" placeholder="••••••••" onkeydown="if(event.key==='Enter') trocarSenha()" />
+          <button class="toggle-senha" type="button" onclick="toggleSenha('troca-confirma', this)" title="Mostrar/ocultar senha">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <button class="btn-auth" id="btn-trocar" onclick="trocarSenha()">
+        <span class="spinner"></span>
+        <span class="btn-text">Salvar e entrar</span>
+      </button>
+    </div>
+
   </div>
 </div>
 
@@ -524,8 +554,19 @@
     window.location.href = 'index.html';
   }
 
-  // ── Acorda o backend em segundo plano ao carregar a página ──
-  fetch(`${API}/health`).catch(() => {});
+  // ── Acorda o backend e confere se o cadastro livre está liberado ──
+  fetch(`${API}/config`)
+    .then(r => r.ok ? r.json() : null)
+    .then(cfg => {
+      if (cfg && cfg.permitir_cadastro === false) {
+        document.getElementById('tab-cadastro').style.display = 'none';
+        mostrarAba('login');
+      }
+    })
+    .catch(() => {});
+
+  // Sessão pendente de troca da senha provisória (não fica salva até a troca)
+  let trocaPendente = null;
 
   // Contador de segundos para mensagem de espera
   let contagemTimer = null;
@@ -574,6 +615,15 @@
       const data = await res.json();
       if (!res.ok) return showAlerta(data.erro || 'Erro ao autenticar.', 'erro');
 
+      if (data.usuario.deve_trocar_senha) {
+        trocaPendente = { token: data.token, senhaAtual: senha };
+        limparAlerta();
+        document.getElementById('painel-auth').style.display = 'none';
+        document.getElementById('painel-troca').style.display = 'block';
+        document.getElementById('troca-senha').focus();
+        return;
+      }
+
       localStorage.setItem('versah_token', data.token);
       localStorage.setItem('versah_usuario', JSON.stringify(data.usuario));
 
@@ -589,6 +639,40 @@
       }
     } finally {
       setLoading('btn-entrar', false);
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // TROCAR SENHA PROVISÓRIA (primeiro acesso)
+  // ─────────────────────────────────────────────────────────
+  async function trocarSenha() {
+    limparAlerta();
+    const nova     = document.getElementById('troca-senha').value;
+    const confirma = document.getElementById('troca-confirma').value;
+
+    if (nova.length < 8)    return showAlerta('A senha deve ter ao menos 8 caracteres.', 'erro');
+    if (nova !== confirma)  return showAlerta('As senhas não coincidem.', 'erro');
+
+    try {
+      setLoading('btn-trocar', true);
+      const res = await fetch(`${API}/auth/trocar-senha`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${trocaPendente.token}` },
+        body: JSON.stringify({ senha_atual: trocaPendente.senhaAtual, nova_senha: nova })
+      });
+      const data = await res.json();
+      if (!res.ok) return showAlerta(data.erro || 'Erro ao salvar a senha.', 'erro');
+
+      trocaPendente = null;
+      localStorage.setItem('versah_token', data.token);
+      localStorage.setItem('versah_usuario', JSON.stringify(data.usuario));
+
+      showAlerta('✓ Senha definida! Redirecionando...', 'ok');
+      setTimeout(() => { window.location.href = 'index.html'; }, 800);
+    } catch {
+      showAlerta('Não foi possível conectar ao servidor.', 'erro');
+    } finally {
+      setLoading('btn-trocar', false);
     }
   }
 

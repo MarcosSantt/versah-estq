@@ -481,6 +481,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
         Implantes &amp; Componentes
       </button>
+      <a id="link-admin" class="sidebar-link" href="admin.html" style="display: none; text-decoration: none; margin-top: 12px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Administração
+      </a>
     </nav>
 
     <div class="sidebar-footer">
@@ -1008,6 +1012,9 @@
       { label: 'Filtrar: Itens para Repor', hint: 'Filtro', icone: iconWarn, run: () => { mudarAba('estoque'); setFiltro('alerta'); } },
       { label: 'Sair do Sistema', hint: 'Conta', icone: iconLogout, run: () => logout() },
     ];
+    const usuarioLogado = JSON.parse(localStorage.getItem('versah_usuario') || 'null');
+    if (usuarioLogado && usuarioLogado.is_admin)
+      comandos.splice(comandos.length - 1, 0, { label: 'Administração', hint: 'Ir para', icone: iconGear, run: () => { window.location.href = 'admin.html'; } });
 
     items.forEach(item => {
       comandos.push({
@@ -1584,6 +1591,8 @@
     }
 
     document.getElementById('header-sub').textContent = `Logado como: ${usuario.nome}`;
+    document.getElementById('link-admin').style.display = usuario.is_admin ? '' : 'none';
+    atualizarUsuarioLogado();
 
     carregarListaCategorias();
     carregarListaUnidades();
@@ -1601,10 +1610,24 @@
     document.getElementById('loading-overlay').style.display = 'none';
   }
 
+  // Atualiza nome/perfil a partir do servidor (ex.: virou administrador depois do login)
+  async function atualizarUsuarioLogado() {
+    try {
+      const res = await fetch(`${API}/auth/me`, { headers: authHeaders() });
+      if (res.status === 401) return logout();
+      if (!res.ok) return;
+      const usuario = await res.json();
+      if (usuario.deve_trocar_senha) return logout();
+      localStorage.setItem('versah_usuario', JSON.stringify(usuario));
+      document.getElementById('header-sub').textContent = `Logado como: ${usuario.nome}`;
+      document.getElementById('link-admin').style.display = usuario.is_admin ? '' : 'none';
+    } catch {}
+  }
+
   async function carregarEstoque() {
     try {
       const res = await fetch(`${API}/estoque`, { headers: authHeaders() });
-      if (res.status === 401) return logout();
+      if (res.status === 401 || res.status === 403) return logout();
       if (!res.ok) return showErro('Erro ao carregar estoque. Tente recarregar a página.');
       items = await res.json();
       render();

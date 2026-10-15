@@ -30,6 +30,7 @@ services:
       DATABASE_URL: postgres://versah_user:versah_secret@db:5432/versah_estoque
       JWT_SECRET: mude_esta_chave_para_producao_32chars_min
       PORT: 3000
+      ADMIN_EMAIL: ""   # e-mail de uma conta existente que vira administrador ao subir
     ports:
       - "3000:3000"
     depends_on:
